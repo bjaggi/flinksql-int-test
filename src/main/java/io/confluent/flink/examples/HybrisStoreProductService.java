@@ -21,7 +21,7 @@ public class HybrisStoreProductService {
     public TableResult creatHybrisStoreProductTable() {
         return env.executeSql(
             "INSERT INTO  "+ freeShippingTableName+
-                    "  SELECT \n" +
+                  "SELECT \n" +
                     "    si.upcId,\n" +
                     "    si.storeId, \n" +
                     "    si.productId,\n" +
@@ -69,24 +69,19 @@ public class HybrisStoreProductService {
                     "        ))\n" +
                     "    ] AS headers\n" +
                     "FROM\n" +
-                    "  `shared.digital.products.store-item` si\n" +
-                    "  INNER JOIN `shared.digital.products.product-eligibility` elig \n" +
+                    "  `Development`.`Digital-Public-Development`.`shared.digital.products.store-item` si\n" +
+                    "  INNER JOIN `Development`.`Digital-Public-Development`.`shared.digital.products.product-eligibility` elig \n" +
                     "    ON (\n" +
                     "      si.storeId = elig.storeId AND \n" +
                     "      si.upcId = elig.upcId\n" +
                     "    ) \n" +
-                    "  LEFT JOIN `shared.digital.products.ilc` ilc\n" +
+                    "  LEFT JOIN `Development`.`Digital-Public-Development`.`shared.digital.products.ilc` ilc\n" +
                     "    ON (\n" +
                     "      si.storeId = ilc.storeId AND \n" +
                     "      si.upcId = ilc.upcId ) \n" +
-                    "  LEFT JOIN `shared.digital.products.product-hierarchy` ph\n" +
-                    "      ON si.upcId = ph.upcId\n" +
-                    ")"+
-
-                ") DISTRIBUTED INTO 1 BUCKETS WITH (\n" +
-                "   'kafka.retention.time' = '1 h',\n" +
-                "   'scan.startup.mode' = 'earliest-offset'\n" +
-                ");");
+                    "  LEFT JOIN `Development`.`Digital-Public-Development`.`shared.digital.products.product-hierarchy` ph\n" +
+                    "      ON si.upcId = ph.upcId\n"
+                    );
     }
 
 //    public TableResult ordersOver50Dollars() {
