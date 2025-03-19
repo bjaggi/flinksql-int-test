@@ -1,5 +1,10 @@
 .idea/*
 .target/*
+target/*
+src/main/resources/cloud.properties
+dependency-reduced-pom.xml
+
+
 
 
 
