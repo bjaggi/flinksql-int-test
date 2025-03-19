@@ -20,7 +20,7 @@ public class HybrisStoreProductService {
 
     public TableResult creatHybrisStoreProductTable() {
         return env.executeSql(
-            "INSERT INTO  "+ freeShippingTableName+
+            "CREATE  TABLE  "+ hybrisStoreProductTableName+ " AS " +
                   "SELECT \n" +
                     "    si.upcId,\n" +
                     "    si.storeId, \n" +
