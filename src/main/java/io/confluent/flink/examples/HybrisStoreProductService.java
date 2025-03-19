@@ -20,8 +20,8 @@ public class HybrisStoreProductService {
 
     public TableResult creatHybrisStoreProductTable() {
         return env.executeSql(
-            "CREATE  TABLE  "+ hybrisStoreProductTableName+ " AS " +
-                  "SELECT \n" +
+            "INSERT INTO "+ hybrisStoreProductTableName+
+                  " SELECT \n" +
                     "    si.upcId,\n" +
                     "    si.storeId, \n" +
                     "    si.productId,\n" +
@@ -47,25 +47,25 @@ public class HybrisStoreProductService {
                     "        CONCAT(\n" +
                     "          'Partition: ', CAST(si.`partition` AS STRING), \n" +
                     "          ', Offset: ', CAST(si.`offset` AS STRING), \n" +
-                    "          ', Timestamp: ', CAST(si.`timestamp` AS STRING)\n" +
+                    "          ' Timestamp: ', CAST( EXTRACT(EPOCH FROM si.`timestamp`)  AS STRING ) \n" +
                     "        ),\n" +
                     "        'source:shared.digital.products.product-eligibility', \n" +
                     "        CONCAT(\n" +
                     "          'Partition: ', CAST(elig.`partition` AS STRING), \n" +
                     "          ', Offset: ', CAST(elig.`offset` AS STRING), \n" +
-                    "          ', Timestamp: ', CAST(elig.`timestamp` AS STRING)\n" +
+                    "          ' Timestamp: ', CAST( EXTRACT(EPOCH FROM si.`timestamp`)  AS STRING ) \n" +
                     "          ),\n" +
                     "        'source:shared.digital.products.ilc', IF (ilc.upcId IS NULL, 'empty', \n" +
                     "        CONCAT(\n" +
                     "            'Partition: ', CAST(ilc.`partition` AS STRING), \n" +
                     "            ', Offset: ', CAST(ilc.`offset` AS STRING), \n" +
-                    "            ', Timestamp: ', CAST(ilc.`timestamp` AS STRING)\n" +
+                    "           ' Timestamp: ', CAST( EXTRACT(EPOCH FROM si.`timestamp`)  AS STRING ) \n" +
                     "        )),\n" +
                     "        'source:shared.digital.products.product-hierarchy', IF (ph.upcId IS NULL, 'empty', \n" +
                     "        CONCAT(\n" +
                     "            'Partition: ', CAST(ph.`partition` AS STRING), \n" +
-                    "            ', Offset: ', CAST(ph.`offset` AS STRING), \n" +
-                    "            ', Timestamp: ', CAST(ph.`timestamp` AS STRING)\n" +
+                    "            ', Offset: ', CAST(ph.`offset` AS STRING)\n" +
+                   // "            --' Timestamp: ',  CAST(ph.`timestamp`  AS STRING) \n" +
                     "        ))\n" +
                     "    ] AS headers\n" +
                     "FROM\n" +
@@ -80,7 +80,8 @@ public class HybrisStoreProductService {
                     "      si.storeId = ilc.storeId AND \n" +
                     "      si.upcId = ilc.upcId ) \n" +
                     "  LEFT JOIN `Development`.`Digital-Public-Development`.`shared.digital.products.product-hierarchy` ph\n" +
-                    "      ON si.upcId = ph.upcId\n"
+                    "      ON si.upcId = ph.upcId\n" +
+                    ";"
                     );
     }
 
