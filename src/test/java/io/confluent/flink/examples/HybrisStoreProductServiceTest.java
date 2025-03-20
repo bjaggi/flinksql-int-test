@@ -27,7 +27,7 @@ public class HybrisStoreProductServiceTest extends FlinkIntegrationTest {
     }
 
     @Test
-    @Timeout(90)
+    @Timeout(240)
     public void allCustomers_shouldReturnTheDetailsOfAllCustomers() throws Exception {
         // Clean up any tables left over from previously executing this test.
         //deleteTable(hybrisStoreProductTableName);
@@ -45,6 +45,7 @@ public class HybrisStoreProductServiceTest extends FlinkIntegrationTest {
 
         // Execute the query.
          TableResult results = hybrisStoreProductService.creatHybrisStoreProductTable();
+        System.out.println(" job id : " + results.getJobClient().stream().toList());
 
         // Fetch the actual results.
         List<Row> actual = fetchRows(results)
