@@ -28,7 +28,7 @@ public class HybrisStoreProductServiceTest extends FlinkIntegrationTest {
 
     @Test
     @Timeout(240)
-    public void allCustomers_shouldReturnTheDetailsOfAllCustomers() throws Exception {
+    public void hybrisQueryTest() throws Exception {
         // Clean up any tables left over from previously executing this test.
         //deleteTable(hybrisStoreProductTableName);
 
