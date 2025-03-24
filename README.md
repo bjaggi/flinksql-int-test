@@ -11,7 +11,9 @@ This Integration framework is based on :
 
 
 <h2>Strategy:</h2> 
-The Integration Test can be run manually or automatically via github actions ( on any code change, github actions can run change run a    ``mvn package/ mvn  test`` ) . Which would test/assert the committed code and validate the [input vs output data](https://github.com/bjaggi/flinksql-int-test/blob/main/src/test/java/io/confluent/flink/examples/HybrisStoreProductServiceTest.java#L61).  
+The Integration Test can be run manually or automatically via github actions ( on any code change, github actions can run change run a    ``mvn package/ mvn  test`` ) . Which would test/assert the committed code and validate the [input vs output data](https://github.com/bjaggi/flinksql-int-test/blob/main/src/test/java/io/confluent/flink/examples/HybrisStoreProductServiceTest.java#L61) .   
+
+
 
 
 Note : CTAS( Create Table As) is currently not available in the current version of Table API `<confluent-plugin.version>1.20-50</confluent-plugin.version>`. CTAS in TableAPI, should be released in the next version Q2/2025. In order to accomadate this, we are running a ``SELECT`` instead of ``CREATE TABLE AS SELECT * FROM...``
