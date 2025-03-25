@@ -21,6 +21,23 @@ This Integration framework is based on :
 - You can also add a step where only after all tests are passed SQL is pushed to the targetted environment. 
 - It is generally recommended to have one unit case per test case/scenario, it may be required to insert data relevant to that test case and this is supported by the Table API.
 
+<b> <font size="8">How to run:</font size></b> 
+
+- Create a file called `cloud.properties` in the  `resources` folder & fill the following details:    
+```html
+client.organization-id:
+client.environment-id:
+client.flink-api-key:
+client.flink-api-secret : 
+client.compute-pool-id:
+client.cloud: 
+client.region: 
+```
+- execute `mvn package` or manually run `HybrisStoreProductServiceTest.java` in the `test` folder.
+- Make a note of the Job-Id in the logs, this is the Job that will run on CC. example ` job id : [table-api-2025-03-25-104344-dd870732-f129-436c-b433-999f3319aaed-sql]
+  ` 
+- If tests fail, check the reason. Very likely its failing for timeout of expected data not matching with input data.   
+
 
 <br><br>
 Note : CTAS( Create Table As) is currently not available in the current version of Table API `<confluent-plugin.version>1.20-50</confluent-plugin.version>`. CTAS in TableAPI, should be released in the next version Q2/2025. In order to accomadate this, we are running a ``SELECT`` instead of ``CREATE TABLE AS SELECT * FROM...``
