@@ -1,6 +1,6 @@
 # Flinksql integration tests using TableAPI     
 <br>
-<b> <font size="6">Introduction : </font ></b>
+<b> <font size="8">Introduction : </font ></b>
 
 This repo is created as a reference project for creating <b>integration</b> tests when using Confluent Flink SQL. Currently, this code uses the Flink's Table API to [submit](https://github.com/bjaggi/flinksql-int-test/blob/main/src/test/java/io/confluent/flink/examples/HybrisStoreProductServiceTest.java#L47). A flink SQL. Sample data was inserted manually, and that data is present in the [insert_data.sql](https://github.com/bjaggi/flinksql-int-test/blob/main/src/main/resources/insert_data.sql).
 <br>
@@ -14,7 +14,7 @@ This Integration framework is based on :
 - A real Confluent Cloud cluster & Flink ( configure : `resources/cloud.properties` )
 
 
-<b> <font size="6">Strategy:</b> </font size="6">
+<b> <font size="8">Strategy:</font size></b> 
 
 - The Integration Test can be run manually or <b>automatically via github actions</b> ( ie: on any SQL code change & git commit, github actions can run change run a    `mvn package/ mvn test`.  )
   - Which would test/assert the committed code and validate the [input vs output data](https://github.com/bjaggi/flinksql-int-test/blob/main/src/test/java/io/confluent/flink/examples/HybrisStoreProductServiceTest.java#L61). 
