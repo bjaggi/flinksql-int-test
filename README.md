@@ -1,6 +1,6 @@
 # Flinksql integration tests using TableAPI     
 <br>
-<b> <font size="8">Introduction : </font ></b>
+<b> <font size="10">Introduction : </font ></b>
 
 This repo is created as a reference project for creating <b>integration</b> tests when using Confluent Flink SQL. Currently, this code uses the Flink's Table API to [submit](https://github.com/bjaggi/flinksql-int-test/blob/main/src/test/java/io/confluent/flink/examples/HybrisStoreProductServiceTest.java#L47). A flink SQL. Sample data was inserted manually, and that data is present in the [insert_data.sql](https://github.com/bjaggi/flinksql-int-test/blob/main/src/main/resources/insert_data.sql).
 <br>
@@ -14,14 +14,14 @@ This Integration framework is based on :
 - A real Confluent Cloud cluster & Flink ( configure : `resources/cloud.properties` )
 
 
-<b> <font size="8">Strategy:</font size></b> 
+<b> <font size="10">Strategy:</font ></b> 
 
 - The Integration Test can be run manually or <b>automatically via github actions</b> ( ie: on any SQL code change & git commit, github actions can run change run a    `mvn package/ mvn test`.  )
   - Which would test/assert the committed code and validate the [input vs output data](https://github.com/bjaggi/flinksql-int-test/blob/main/src/test/java/io/confluent/flink/examples/HybrisStoreProductServiceTest.java#L61). 
 - You can also add a step where only after all tests are passed SQL is pushed to the targetted environment. 
 - It is generally recommended to have one unit case per test case/scenario, it may be required to insert data relevant to that test case and this is supported by the Table API.
 
-<b> <font size="8">How to run:</font size></b> 
+<b> <font size="10">How to run the tests:</font ></b> 
 
 - Create a file called `cloud.properties` in the  `resources` folder & fill the following details:    
 ```html
@@ -34,7 +34,7 @@ client.cloud:
 client.region: 
 ```
 - execute `mvn package` or manually run `HybrisStoreProductServiceTest.java` in the `test` folder.
-- Make a note of the Job-Id in the logs, this is the Job that will run on CC. example ` job id : [table-api-2025-03-25-104344-dd870732-f129-436c-b433-999f3319aaed-sql]
+- Make a note of the Job-Id in the logs, this is the Job that will be run on your CC Flink. example ` job id : [table-api-2025-03-25-104344-dd870732-f129-436c-b433-999f3319aaed-sql]
   ` 
 - If tests fail, check the reason. Very likely its failing for timeout of expected data not matching with input data.   
 
