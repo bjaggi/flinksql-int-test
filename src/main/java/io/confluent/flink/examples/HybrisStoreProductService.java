@@ -41,33 +41,34 @@ public class HybrisStoreProductService {
                     "      WHEN ph.isInStoreOnly IS NULL\n" +
                     "      THEN false\n" +
                     "      ELSE ph.isInStoreOnly\n" +
-                    "    END as isInStoreOnly,\n" +
-                    "    MAP[\n" +
-                    "        'source:shared.digital.products.store-item', \n" +
-                    "        CONCAT(\n" +
-                    "          'Partition: ', CAST(si.`partition` AS STRING), \n" +
-                    "          ', Offset: ', CAST(si.`offset` AS STRING) \n" +
-                    // "    "          ' Timestamp: ', CAST( EXTRACT(EPOCH FROM si.`timestamp`)  AS STRING ) \n" +
-                    "        ),\n" +
-                    "        'source:shared.digital.products.product-eligibility', \n" +
-                    "        CONCAT(\n" +
-                    "          'Partition: ', CAST(elig.`partition` AS STRING), \n" +
-                    "          ', Offset: ', CAST(elig.`offset` AS STRING) \n" +
-                    // "   "          ' Timestamp: ', CAST( EXTRACT(EPOCH FROM si.`timestamp`)  AS STRING ) \n" +
-                    "          ),\n" +
-                    "        'source:shared.digital.products.ilc', IF (ilc.upcId IS NULL, 'empty', \n" +
-                    "        CONCAT(\n" +
-                    "            'Partition: ', CAST(ilc.`partition` AS STRING), \n" +
-                    "            ', Offset: ', CAST(ilc.`offset` AS STRING) \n" +
-                    // "    "           ' Timestamp: ', CAST( EXTRACT(EPOCH FROM si.`timestamp`)  AS STRING ) \n" +
-                    "        )),\n" +
-                    "        'source:shared.digital.products.product-hierarchy', IF (ph.upcId IS NULL, 'empty', \n" +
-                    "        CONCAT(\n" +
-                    "            'Partition: ', CAST(ph.`partition` AS STRING), \n" +
-                    "            ', Offset: ', CAST(ph.`offset` AS STRING)\n" +
-                   // "            --' Timestamp: ',  CAST(ph.`timestamp`  AS STRING) \n" +
-                    "        ))\n" +
-                    "    ] AS headers\n" +
+                    "    END as isInStoreOnly\n" +
+                //     "    END as isInStoreOnly,\n" +
+                //     "    MAP[\n" +
+                //     "        'source:shared.digital.products.store-item', \n" +
+                //     "        CONCAT(\n" +
+                //     "          'Partition: ', CAST(si.`partition` AS STRING), \n" +
+                //     "          ', Offset: ', CAST(si.`offset` AS STRING) \n" +
+                //     // "    "          ' Timestamp: ', CAST( EXTRACT(EPOCH FROM si.`timestamp`)  AS STRING ) \n" +
+                //     "        ),\n" +
+                //     "        'source:shared.digital.products.product-eligibility', \n" +
+                //     "        CONCAT(\n" +
+                //     "          'Partition: ', CAST(elig.`partition` AS STRING), \n" +
+                //     "          ', Offset: ', CAST(elig.`offset` AS STRING) \n" +
+                //     // "   "          ' Timestamp: ', CAST( EXTRACT(EPOCH FROM si.`timestamp`)  AS STRING ) \n" +
+                //     "          ),\n" +
+                //     "        'source:shared.digital.products.ilc', IF (ilc.upcId IS NULL, 'empty', \n" +
+                //     "        CONCAT(\n" +
+                //     "            'Partition: ', CAST(ilc.`partition` AS STRING), \n" +
+                //     "            ', Offset: ', CAST(ilc.`offset` AS STRING) \n" +
+                //     // "    "           ' Timestamp: ', CAST( EXTRACT(EPOCH FROM si.`timestamp`)  AS STRING ) \n" +
+                //     "        )),\n" +
+                //     "        'source:shared.digital.products.product-hierarchy', IF (ph.upcId IS NULL, 'empty', \n" +
+                //     "        CONCAT(\n" +
+                //     "            'Partition: ', CAST(ph.`partition` AS STRING), \n" +
+                //     "            ', Offset: ', CAST(ph.`offset` AS STRING)\n" +
+                //    // "            --' Timestamp: ',  CAST(ph.`timestamp`  AS STRING) \n" +
+                //     "        ))\n" +
+                //     "    ] AS headers\n" +
                     "FROM\n" +
                     "  `Development`.`Digital-Public-Development`.`shared.digital.products.store-item` si\n" +
                     "  INNER JOIN `Development`.`Digital-Public-Development`.`shared.digital.products.product-eligibility` elig \n" +

@@ -4,6 +4,8 @@ target/*
 src/main/resources/cloud.properties
 dependency-reduced-pom.xml
 */cloud.properties
+.DS_Store
+.vscode/*
 
 
 

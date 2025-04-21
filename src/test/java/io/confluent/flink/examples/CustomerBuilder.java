@@ -24,7 +24,7 @@ class CustomerBuilder {
     private boolean isNewIlc;
     private boolean isEligible;
     private boolean isInStoreOnly;
-    private String headers;
+    //private String headers;
 
 
 
@@ -52,12 +52,12 @@ class CustomerBuilder {
         this.stockStatus = "inStock";
         this.stockStatusId = "1";
         this.storeBOH = "150.75";
-        this.ilcPrimary = null;
-        this.ilcs = null;
+        this.ilcPrimary = "ILC12345";
+        this.ilcs = "ILC12345";
         this.isNewIlc = true;
         this.isEligible = true;
         this.isInStoreOnly = false;
-        this.headers = "{source:shared.digital.products.store-item=Partition: 1, Offset: 4, source:shared.digital.products.product-hierarchy=empty, source:shared.digital.products.ilc=empty, source:shared.digital.products.product-eligibility=Partition: 2, Offset: 0}";
+       // this.headers = "{source:shared.digital.products.store-item=Partition: 1, Offset: 4, source:shared.digital.products.product-hierarchy=empty, source:shared.digital.products.ilc=empty, source:shared.digital.products.product-eligibility=Partition: 2, Offset: 0}";
 
     }
 
@@ -93,6 +93,6 @@ class CustomerBuilder {
 
     public Row build() {
         //return Row.of(customerId, name, address, postCode, city, email);
-        return Row.of(upcId, storeId, productId, upcTypeName, stockStatus, stockStatusId,storeBOH, ilcPrimary, ilcs, isNewIlc, isEligible, isInStoreOnly, headers);
+        return Row.of(upcId, storeId, productId, upcTypeName, stockStatus, stockStatusId,storeBOH, ilcPrimary, ilcs, isNewIlc, isEligible, isInStoreOnly);
     }
 }

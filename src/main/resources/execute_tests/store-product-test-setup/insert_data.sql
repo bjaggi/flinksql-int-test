@@ -1,3 +1,6 @@
+EXECUTE STATEMENT SET BEGIN
+
+
 INSERT INTO `Development`.`Digital-Public-Development`.`shared.digital.products.product-eligibility`
 (upcId, storeId, upcTypeName, productId, productEligibility)
 VALUES ('19685318515', 20, 'UPCA', '5224494', true);
@@ -23,9 +26,9 @@ INSERT INTO `Development`.`Digital-Public-Development`.`shared.digital.products.
 
 
 INSERT INTO `Development`.`Digital-Public-Development`.`shared.digital.products.ilc`
-(`upcId`, `storeId`, `productId`, `ilcPrimary`, `ilcs`, `timestamp`, `partition`, `offset`)
+(`upcId`, `storeId`, `productId`, `ilcPrimary`, `ilcs`  )
 VALUES
-('19685318515', 20, '5224494', 'ILC12345', 'ILC12345, ILC67890', UNIX_TIMESTAMP(), 0, 0);
+('19685318515', 20, '5224494', 'ILC12345', 'ILC12345, ILC67890');
 
 
 
@@ -51,3 +54,5 @@ INSERT INTO `Development`.`Digital-Public-Development`.`shared.digital.products.
 VALUES
 ( '19685318515', 20, 'UPCA',  '5224494', TRUE );
 
+
+END;

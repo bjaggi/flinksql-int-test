@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.*;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -35,6 +36,8 @@ public abstract class FlinkIntegrationTest {
         EnvironmentSettings settings = ConfluentSettings.fromResource("/cloud.properties");
         env = TableEnvironment.create(settings);
 
+        File[] testBedFoldersAndFiles = (new File(getClass().getResource("/execute_tests").toURI())).listFiles();
+        System.out.println(testBedFoldersAndFiles);
         isShuttingDown = false;
         shutdownHook = new Thread(() -> {
             logger.info("Shutdown Detected. Cleaning up resources.");
