@@ -1,83 +1,109 @@
-# Flinksql integration tests using TableAPI     
-<br>
-<b> <font size="10">Introduction : </font ></b>
+# Flink SQL Integration Testing Framework
 
-This repo is created as a reference project for creating <b>integration</b> tests when using Confluent Flink SQL. Currently, this code uses the Flink's Table API to [submit](https://github.com/bjaggi/flinksql-int-test/blob/main/src/test/java/io/confluent/flink/examples/HybrisStoreProductServiceTest.java#L47). A flink SQL. Sample data was inserted manually, and that data is present in the [insert_data.sql](https://github.com/bjaggi/flinksql-int-test/blob/main/src/main/resources/insert_data.sql).
-<br>
-You can also choose to insert data programmatically, this code has been developed from the [sample project](https://github.com/confluentinc/learn-apache-flink-table-api-for-java-exercises/blob/main/solutions/03-building-a-streaming-pipeline/src/test/java/marketplace/CustomerServiceIntegrationTest.java#L43).
-Data could also be inserted programmatically for each test case. 
+## Use Case
+This framework enables automated integration testing of Flink SQL applications in Confluent Cloud. It helps ensure that your SQL queries work correctly with real data before deployment to production.
 
-This Integration framework is based on :
-- A Java/Maven code( Current repo on the git)
-  - [Unit Test code in Java](https://github.com/bjaggi/flinksql-int-test/blob/main/src/test/java/io/confluent/flink/examples/HybrisStoreProductServiceTest.java#L31)
-  - [Resources folder](https://github.com/bjaggi/flinksql-int-test/tree/main/src/main/resources)
-- A real Confluent Cloud cluster & Flink ( configure : `resources/cloud.properties` )
+Key benefits:
+- Automated validation of Flink SQL queries
+- Real-time testing with Confluent Cloud
+- Support for both manual and CI/CD testing workflows
+- Flexible test data management
 
+## Overview
+A Java-based testing framework that uses Flink's Table API to validate SQL queries against a Confluent Cloud cluster. The framework supports:
+- Programmatic and file-based test data insertion
+- Automated test execution via GitHub Actions
+- Customizable test resource locations
+- Comprehensive assertion capabilities
 
-<b> <font size="10">Strategy:</font ></b> 
+## Components
+1. **Java Test Framework**
+   - Unit tests in Java using JUnit
+   - Flink Table API integration
+   - Confluent Cloud connectivity
 
-- The Integration Test can be run manually or <b>automatically via github actions</b> ( ie: on any SQL code change & git commit, github actions can run change run a    `mvn package/ mvn test`.  )
-  - Which would test/assert the committed code and validate the [input vs output data](https://github.com/bjaggi/flinksql-int-test/blob/main/src/test/java/io/confluent/flink/examples/HybrisStoreProductServiceTest.java#L61). 
-- You can also add a step where only after all tests are passed SQL is pushed to the targetted environment. 
-- It is generally recommended to have one unit case per test case/scenario, it may be required to insert data relevant to that test case and this is supported by the Table API.
+2. **Test Resources**
+   - SQL files for data insertion
+   - Test case configurations
+   - Cloud connection properties
 
-<b> <font size="10">Test Resources Structure:</font ></b>
-
-The test resources are located in the `src/main/resources/execute_tests` directory by default. This directory contains test cases organized in folders:
+## Test Resources Structure
+The test resources are organized in the `src/main/resources/execute_tests` directory (configurable):
 
 ```
 execute_tests/
-├── digital-stores-insert/        # Tests for digital stores insertion
-│   ├── insert_data.sql          # Test data for stores
-│   └── shared-digital-stores-stores-insert.sql  # Store insertion queries
-├── store-eligibility-location/   # Tests for store eligibility
-│   └── insert_data.sql          # Test data for eligibility
-└── store-product-test-setup/    # Tests for product setup
-    └── insert_data.sql          # Test data for products
+├── digital-stores-insert/        # Digital store tests
+│   ├── insert_data.sql          # Store test data
+│   └── shared-digital-stores-stores-insert.sql
+├── store-eligibility-location/   # Eligibility tests
+│   └── insert_data.sql
+└── store-product-test-setup/    # Product tests
+    └── insert_data.sql
 ```
 
-Each test folder typically contains:
-- `insert_data.sql`: Contains INSERT statements for test data
-- Additional SQL files for specific test scenarios
-- Test-specific configuration files if needed
+### Test Folder Contents
+- `insert_data.sql`: Test data INSERT statements
+- Test-specific SQL files
+- Configuration files as needed
 
-<b> <font size="10">Externalizing Test Resources:</font ></b>
+## Configuration
 
-You can externalize the location of test resources in two ways:
+### Cloud Properties
+Create `resources/cloud.properties`:
+```properties
+client.organization-id=your-org-id
+client.environment-id=your-env-id
+client.flink-api-key=your-api-key
+client.flink-api-secret=your-api-secret
+client.compute-pool-id=your-pool-id
+client.cloud=your-cloud
+client.region=your-region
+```
 
-1. Using System Property:
+### Test Resources Location
+Customize the test resources location using:
+
+1. System Property:
 ```bash
 mvn test -Dflink.test.resources.path=/custom/path/to/resources
 ```
 
-2. Using Environment Variable:
+2. Environment Variable:
 ```bash
 export FLINK_TEST_RESOURCES_PATH=/custom/path/to/resources
 mvn test
 ```
 
-This is useful when:
-- Running tests with different data sets
-- Sharing test resources across projects
-- CI/CD pipelines with environment-specific test data
+## Running Tests
 
-<b> <font size="10">How to run the tests:</font ></b> 
-
-- Create a file called `cloud.properties` in the  `resources` folder & fill the following details:    
-```html
-client.organization-id:
-client.environment-id:
-client.flink-api-key:
-client.flink-api-secret : 
-client.compute-pool-id:
-client.cloud: 
-client.region: 
+### Manual Execution
+```bash
+mvn package
+# or
+mvn test
 ```
-- execute `mvn package` or manually run `HybrisStoreProductServiceTest.java` in the `test` folder.
-- Make a note of the Job-Id in the logs, this is the Job that will be run on your CC Flink. example ` job id : [table-api-2025-03-25-104344-dd870732-f129-436c-b433-999f3319aaed-sql]
-  ` 
-- If tests fail, check the reason. Very likely its failing for timeout of expected data not matching with input data.   
 
+### Via IDE
+Run `HybrisStoreProductServiceTest.java` directly in your IDE.
 
-<br><br>
-Note : CTAS( Create Table As) is currently not available in the current version of Table API `<confluent-plugin.version>1.20-50</confluent-plugin.version>`. CTAS in TableAPI, should be released in the next version Q2/2025. In order to accomadate this, we are running a ``SELECT`` instead of ``CREATE TABLE AS SELECT * FROM...``
+### Test Output
+- Job ID will be logged (e.g., `job id: [table-api-2025-03-25-104344-dd870732-f129-436c-b433-999f3319aaed-sql]`)
+- Check test results in the console output
+- Failed tests will show data mismatches or timeouts
+
+## CI/CD Integration
+- Automatically run tests on SQL code changes
+- GitHub Actions integration available
+- Optional: Gate deployments based on test results
+
+## Known Limitations
+- CTAS (Create Table As Select) is not available in Table API version 1.20-50
+- Expected in Q2/2025
+- Current workaround: Using `SELECT` instead of `CREATE TABLE AS SELECT`
+
+## Best Practices
+1. Create one test case per scenario
+2. Use appropriate test data for each case
+3. Keep test resources organized by feature
+4. Use meaningful test and file names
+5. Document expected results
