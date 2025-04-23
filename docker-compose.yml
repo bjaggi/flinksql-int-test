@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  flink-test:
+    build: .
+    environment:
+      - FLINK_TEST_RESOURCES_PATH=/app/resources/execute_tests
+      # Confluent Cloud configuration
+      - CLIENT_ORGANIZATION_ID=${CLIENT_ORGANIZATION_ID}
+      - CLIENT_ENVIRONMENT_ID=${CLIENT_ENVIRONMENT_ID}
+      - CLIENT_FLINK_API_KEY=${CLIENT_FLINK_API_KEY}
+      - CLIENT_FLINK_API_SECRET=${CLIENT_FLINK_API_SECRET}
+      - CLIENT_COMPUTE_POOL_ID=${CLIENT_COMPUTE_POOL_ID}
+      - CLIENT_CLOUD=${CLIENT_CLOUD}
+      - CLIENT_REGION=${CLIENT_REGION}
+    volumes:
+      - ./resources:/app/resources
+      - ./test-results:/app/test-results 
