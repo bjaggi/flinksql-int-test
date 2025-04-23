@@ -1,7 +1,11 @@
 package io.confluent.flink.examples.helper;
 
 import org.apache.flink.types.Row;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 public class RowComparator {
     
@@ -49,7 +53,7 @@ public class RowComparator {
             result.setMessage("One of the rows is null");
             return result;
         }
-        // number of fields 
+        
         if (expected.getArity() != actual.getArity()) {
             result.setEqual(false);
             result.setMessage("Row arity mismatch: expected=" + expected.getArity() + 
@@ -57,15 +61,22 @@ public class RowComparator {
             return result;
         }
 
+        Set<String> fieldNames = expected.getFieldNames(true);
+        List<String> fieldNamesList = fieldNames != null ? new ArrayList<>(fieldNames) : null;
+
         for (int i = 0; i < expected.getArity(); i++) {
             Object expectedField = expected.getField(i);
             Object actualField = actual.getField(i);
 
             if (!Objects.equals(expectedField, actualField)) {
+                String fieldName = fieldNamesList != null && i < fieldNamesList.size() 
+                    ? fieldNamesList.get(i) 
+                    : "field_" + i;
+                
                 result.setEqual(false);
                 result.setMessage(String.format(
-                    "Field mismatch at position %d: expected=%s, actual=%s",
-                    i, expectedField, actualField
+                    "Field '%s' (position %d) mismatch:\nExpected: %s\nActual:   %s",
+                    fieldName, i, expectedField, actualField
                 ));
                 return result;
             }

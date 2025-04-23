@@ -6,6 +6,8 @@ dependency-reduced-pom.xml
 */cloud.properties
 .DS_Store
 .vscode/*
+.dockerignore
+
 
 
 

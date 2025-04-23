@@ -1,6 +1,6 @@
 EXECUTE STATEMENT SET BEGIN
 
-DROP TABLE `Development`.`Digital-Public-Development`.`shared.digital.products.product-eligibility`;
+DROP TABLE `Development`.`Digital-Public-Development`.`shared.digital.products.eligibility`;
 
 CREATE TABLE `Development`.`Digital-Public-Development`.`shared.digital.products.eligibility` (
   `isEligible` BOOLEAN COMMENT 'Gets or sets a value indicating whether the product is eligible to be sold online.',
