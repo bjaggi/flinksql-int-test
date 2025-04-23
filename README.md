@@ -1,5 +1,24 @@
 # Flink SQL Integration Testing Framework
 
+## Table of Contents
+- [Flink SQL Integration Testing Framework](#flink-sql-integration-testing-framework)
+  - [Table of Contents](#table-of-contents)
+  - [Use Case](#use-case)
+  - [Overview](#overview)
+  - [Components](#components)
+  - [Test Resources Structure](#test-resources-structure)
+    - [Test Folder Contents](#test-folder-contents)
+  - [Configuration](#configuration)
+    - [Cloud Properties](#cloud-properties)
+    - [Test Resources Location](#test-resources-location)
+  - [Running Tests](#running-tests)
+    - [Manual Execution](#manual-execution)
+    - [Via IDE](#via-ide)
+    - [Test Output](#test-output)
+  - [CI/CD Integration](#cicd-integration)
+  - [Known Limitations](#known-limitations)
+  - [Best Practices](#best-practices)
+
 ## Use Case
 This framework enables automated integration testing of Flink SQL applications in Confluent Cloud. It helps ensure that your SQL queries work correctly with real data before deployment to production.
 
