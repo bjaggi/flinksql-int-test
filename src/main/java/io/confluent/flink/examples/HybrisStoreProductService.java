@@ -18,7 +18,7 @@ public class HybrisStoreProductService {
         this.freeShippingTableName = freeShippingTableName;
     }
 
-    public TableResult creatHybrisStoreProductTable() {
+    public TableResult executeHybrisStoreProductQuery() {
         return env.executeSql(
             //"INSERT INTO "+ hybrisStoreProductTableName+
                   " SELECT \n" +

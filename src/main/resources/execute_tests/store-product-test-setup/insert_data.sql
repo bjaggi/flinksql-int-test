@@ -1,5 +1,7 @@
 EXECUTE STATEMENT SET BEGIN
 
+//DROP TABLE  `Development`.`Digital-Public-Development`.`shared.digital.products.product-eligibility`;
+
 
 INSERT INTO `Development`.`Digital-Public-Development`.`shared.digital.products.product-eligibility`
 (upcId, storeId, upcTypeName, productId, productEligibility)

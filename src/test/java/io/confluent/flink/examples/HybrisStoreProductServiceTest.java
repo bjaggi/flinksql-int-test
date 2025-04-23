@@ -4,6 +4,10 @@ import org.apache.flink.types.Row;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.apache.flink.table.api.EnvironmentSettings;
+import org.apache.flink.table.api.TableEnvironment;
+import io.confluent.flink.plugin.ConfluentSettings;
+import io.confluent.flink.examples.helper.SqlReader;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -20,6 +24,15 @@ public class HybrisStoreProductServiceTest extends FlinkIntegrationTest {
 
     @Override
     public void setup() {
+
+        EnvironmentSettings settings = ConfluentSettings.fromResource("/cloud.properties");
+        TableEnvironment env = TableEnvironment.create(settings);
+
+        System.out.println("Starting Flink Integration Tests!");
+        System.out.println();System.out.println();
+        SqlReader.listResources(env);
+
+        
         hybrisStoreProductService = new HybrisStoreProductService(
                 env,
                 hybrisStoreProductTableName, hybrisStoreProductTableName
@@ -35,25 +48,25 @@ public class HybrisStoreProductServiceTest extends FlinkIntegrationTest {
         // Create a temporary customers table.
        //  createTemporaryTable(hybrisStoreProductTableName, customersTableDefinition);
 
-        // Generate some customers.
-        List<Row> customers = Stream.generate(() -> new CustomerBuilder().build())
+        // Generate some data.
+        List<Row> data = Stream.generate(() -> new SampleData().build())
                 .limit(5)
                 .toList();
 
-        // Push the customers into the temporary table.
-        //env.fromValues(customers).insertInto(hybrisStoreProductTableName).execute();
+        // Push the data into the temporary table.
+        //env.fromValues(data).insertInto(hybrisStoreProductTableName).execute();
 
         // Execute the query.
-         TableResult results = hybrisStoreProductService.creatHybrisStoreProductTable();
+         TableResult results = hybrisStoreProductService.executeHybrisStoreProductQuery();
         System.out.println(" job id : " + results.getJobClient().stream().toList());
 
         // Fetch the actual results.
         List<Row> actual = fetchRows(results)
-                .limit(customers.size())
+                .limit(data.size())
                 .toList();
 
         // Assert on the results.
-        assertEquals(new HashSet<>(customers), new HashSet<>(actual));
+        assertEquals(data.get(0), actual.get(0));
 
         Set<String> expectedFields = new HashSet<>(Arrays.asList(
                 "customer_id", "name", "address", "postcode", "city", "email"

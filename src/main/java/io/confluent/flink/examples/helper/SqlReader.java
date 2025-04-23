@@ -76,8 +76,25 @@ public class SqlReader {
         // Implementation for create table
     }
 
+    private static String getResourcesPath() {
+        // Try system property first
+        String path = System.getProperty("flink.test.resources.path");
+        if (path != null && !path.isEmpty()) {
+            return path;
+        }
+        
+        // Try environment variable
+        path = System.getenv("FLINK_TEST_RESOURCES_PATH");
+        if (path != null && !path.isEmpty()) {
+            return path;
+        }
+        
+        // Default path
+        return "src/main/resources/execute_tests";
+    }
+
     public static void listResources(TableEnvironment env) {
-        String resourcesPath = "src/main/resources/execute_tests";
+        String resourcesPath = getResourcesPath();
         File resourcesDir = new File(resourcesPath);
         
         if (resourcesDir.exists() && resourcesDir.isDirectory()) {

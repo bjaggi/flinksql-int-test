@@ -21,6 +21,46 @@ This Integration framework is based on :
 - You can also add a step where only after all tests are passed SQL is pushed to the targetted environment. 
 - It is generally recommended to have one unit case per test case/scenario, it may be required to insert data relevant to that test case and this is supported by the Table API.
 
+<b> <font size="10">Test Resources Structure:</font ></b>
+
+The test resources are located in the `src/main/resources/execute_tests` directory by default. This directory contains test cases organized in folders:
+
+```
+execute_tests/
+├── digital-stores-insert/        # Tests for digital stores insertion
+│   ├── insert_data.sql          # Test data for stores
+│   └── shared-digital-stores-stores-insert.sql  # Store insertion queries
+├── store-eligibility-location/   # Tests for store eligibility
+│   └── insert_data.sql          # Test data for eligibility
+└── store-product-test-setup/    # Tests for product setup
+    └── insert_data.sql          # Test data for products
+```
+
+Each test folder typically contains:
+- `insert_data.sql`: Contains INSERT statements for test data
+- Additional SQL files for specific test scenarios
+- Test-specific configuration files if needed
+
+<b> <font size="10">Externalizing Test Resources:</font ></b>
+
+You can externalize the location of test resources in two ways:
+
+1. Using System Property:
+```bash
+mvn test -Dflink.test.resources.path=/custom/path/to/resources
+```
+
+2. Using Environment Variable:
+```bash
+export FLINK_TEST_RESOURCES_PATH=/custom/path/to/resources
+mvn test
+```
+
+This is useful when:
+- Running tests with different data sets
+- Sharing test resources across projects
+- CI/CD pipelines with environment-specific test data
+
 <b> <font size="10">How to run the tests:</font ></b> 
 
 - Create a file called `cloud.properties` in the  `resources` folder & fill the following details:    
