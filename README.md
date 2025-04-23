@@ -14,6 +14,10 @@
   - [Running Tests](#running-tests)
     - [Manual Execution](#manual-execution)
     - [Via IDE](#via-ide)
+    - [Via Docker](#via-docker)
+      - [Prerequisites](#prerequisites)
+      - [Configuration](#configuration-1)
+      - [Custom Test Resources](#custom-test-resources)
     - [Test Output](#test-output)
   - [CI/CD Integration](#cicd-integration)
   - [Known Limitations](#known-limitations)
@@ -104,6 +108,47 @@ mvn test
 
 ### Via IDE
 Run `HybrisStoreProductServiceTest.java` directly in your IDE.
+
+### Via Docker
+The project includes Docker support for containerized test execution.
+
+#### Prerequisites
+- Docker
+- Docker Compose
+
+#### Configuration
+1. Create a `.env` file in the project root:
+```env
+CLIENT_ORGANIZATION_ID=your-org-id
+CLIENT_ENVIRONMENT_ID=your-env-id
+CLIENT_FLINK_API_KEY=your-api-key
+CLIENT_FLINK_API_SECRET=your-api-secret
+CLIENT_COMPUTE_POOL_ID=your-pool-id
+CLIENT_CLOUD=your-cloud
+CLIENT_REGION=your-region
+```
+
+2. Build and run using Docker Compose:
+```bash
+# Build the Docker image
+docker-compose build
+
+# Run the tests
+docker-compose up
+
+# Run and remove containers after completion
+docker-compose up --abort-on-container-exit
+```
+
+3. Access test results:
+- Test results are available in the `test-results` directory
+- Logs are streamed to the console
+
+#### Custom Test Resources
+Mount your custom test resources:
+```bash
+docker-compose run -v /path/to/your/tests:/app/resources/execute_tests flink-test
+```
 
 ### Test Output
 - Job ID will be logged (e.g., `job id: [table-api-2025-03-25-104344-dd870732-f129-436c-b433-999f3319aaed-sql]`)
