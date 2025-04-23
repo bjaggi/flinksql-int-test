@@ -13,12 +13,12 @@ class SampleData {
     private String city;
     private String email;
     private String upcId;
-    private String storeId;
+    private long storeId;
     private String productId;
     private String upcTypeName;
     private String stockStatus;
-    private String stockStatusId;
-    private String storeBOH;
+    private long stockStatusId;
+    private double storeBOH;
     private String ilcPrimary;
     private String ilcs;
     private boolean isNewIlc;
@@ -30,12 +30,12 @@ class SampleData {
 
     public SampleData() {
         this.upcId = "19685318515";
-        this.storeId = "20";
+        this.storeId = 20;
         this.productId = "5224494";
         this.upcTypeName = "UPCA";
         this.stockStatus = "inStock";
-        this.stockStatusId = "1";
-        this.storeBOH = "150.75";
+        this.stockStatusId = 1;
+        this.storeBOH = 150.75;
         this.ilcPrimary = null;
         this.ilcs = null;
         this.isNewIlc = true;
