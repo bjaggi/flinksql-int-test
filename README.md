@@ -56,18 +56,47 @@ The test resources are organized in the `src/main/resources/execute_tests` direc
 ```
 execute_tests/
 ├── digital-stores-insert/        # Digital store tests
-│   ├── insert_data.sql          # Store test data
-│   └── shared-digital-stores-stores-insert.sql
+│   ├── create_tables.sql        # Table creation
+│   ├── drop_tables.sql         # Table cleanup
+│   ├── insert_data.sql         # Test data
+│   └── expected_op.csv         # Expected results
 ├── store-eligibility-location/   # Eligibility tests
-│   └── insert_data.sql
+│   ├── create_tables.sql
+│   ├── drop_tables.sql
+│   ├── insert_data.sql
+│   └── expected_op.csv
 └── store-product-test-setup/    # Product tests
-    └── insert_data.sql
+    ├── create_tables.sql
+    ├── drop_tables.sql
+    ├── insert_data.sql
+    └── expected_op.csv
 ```
 
 ### Test Folder Contents
+Each test directory contains:
+- `create_tables.sql`: Creates necessary tables with Kafka connector settings
+- `drop_tables.sql`: Cleans up tables after testing
 - `insert_data.sql`: Test data INSERT statements
-- Test-specific SQL files
-- Configuration files as needed
+- `expected_op.csv`: Expected output data for validation
+
+## Test Flow
+1. The test reads expected data from CSV files in each subdirectory
+2. For each subdirectory:
+   - Reads the expected output CSV file
+   - Validates the file exists
+   - Imports the data for comparison
+3. Executes the Hybris store product query
+4. Compares the actual results with expected results
+5. Logs detailed comparison information for each row
+6. Cleans up by dropping temporary tables
+
+## Logging
+The test provides detailed logging:
+- Directory and file operations
+- Data import status
+- Query execution details
+- Row-by-row comparison results
+- Visual separators between test sections
 
 ## Configuration
 
