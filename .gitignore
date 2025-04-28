@@ -7,6 +7,9 @@ dependency-reduced-pom.xml
 .DS_Store
 .vscode/*
 .dockerignore
+logs/*
+
+
 
 
 

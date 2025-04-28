@@ -10,8 +10,15 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.flink.table.api.TableEnvironment;
 import org.apache.flink.table.api.EnvironmentSettings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class SqlReader {
+    private static final Logger logger = LoggerFactory.getLogger(SqlReader.class);
+
     public static TableInfo readTableDefinitionAndData(String csvFile) throws IOException {
         try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
             // Read table name (first line)
@@ -41,16 +48,22 @@ public class SqlReader {
         if (sql == null || sql.trim().isEmpty()) {
             return;
         }
-         // Push the customers into the temporary table.
-         //env.fromValues(customers).insertInto(customersTableName).execute();
         try {
-            
             env.executeSql(sql).await();
-            System.out.println("Successfully executed SQL " );
+            logger.info("Successfully executed SQL");
         } catch (Exception e) {
-            System.err.println("Error executing SQL: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Error executing SQL: {}", e.getMessage(), e);
         }
+    }
+
+    protected void deleteTables( TableEnvironment env) {
+    
+            try {
+                env.executeSql(TestConstants.DROP_TABLES_SQL).await();
+            } catch (Exception e) {
+                logger.error("Unable to delete table/s: ",  e);
+            }
+        //}
     }
 
     private static void insertData(File file, TableEnvironment env) {
@@ -67,13 +80,12 @@ public class SqlReader {
             String sql = sqlBuilder.toString();
             executeSql(sql, env);
         } catch (IOException e) {
-            System.err.println("Error reading file: " + file.getPath());
-            e.printStackTrace();
+            logger.error("Error reading file: {}", file.getPath(), e);
         }
     }
 
     private static void createTable(File file) {
-        // Implementation for create table
+        // Implementation needed
     }
 
     private static String getResourcesPath() {
@@ -99,36 +111,68 @@ public class SqlReader {
         
         if (resourcesDir.exists() && resourcesDir.isDirectory()) {
             File[] folders = resourcesDir.listFiles(File::isDirectory);
-            System.out.println("Found " + folders.length + " folders in the resources directory.");
+            logger.info("Found {} folders in the resources directory.", folders.length);
             for (File folder : folders) {
-                System.out.println(folder);
+                logger.info("{}", folder);
             }
-            System.out.println();
-            System.out.println();
-            System.out.println();
+            logger.info("\n\n");
+            
             if (folders != null) {
                 for (File folder : folders) {
-                    
-                    System.out.println("Starting to execute tests in Folder : " + folder.getName() );        
-                     System.out.println();                   
+                    logger.info("Starting to execute tests in Folder: {}", folder.getName());
+                    logger.info("");
                     File[] files = folder.listFiles(File::isFile);
                     if (files != null) {
-                        for (File file : files) {                           
-                            System.out.println("Found file: " + file.getName());
+                        for (File file : files) {
+                            logger.info("Found file: {}", file.getName());
                             if (file.getName().contains(String.valueOf("insert_data").toLowerCase())) {                                    
-                                System.out.println("  Inserting data from file: " + file.getName());
+                                logger.info("  Inserting data from file: {}", file.getName());
                                 insertData(file, env);
                             } else if (file.getName().contains(String.valueOf(".sql").toLowerCase())) {
-                                System.out.println("  Executing the query present in the file: " + file.getName());
+                                logger.info("  Executing the query present in the file: {}", file.getName());
                                 createTable(file);
                             } else {
-                                System.out.println("  Skipping file: " + file.getName());
+                                logger.info("  Skipping file: {}", file.getName());
                             }
-                            System.out.println();
+                            logger.info("");
                         }
                     }
                 }
             }
         }
+    }
+
+    public static List<String> readSqlFiles(String directoryPath) {
+        List<String> sqlContents = new ArrayList<>();
+        try {
+            File directory = new File(directoryPath);
+            if (!directory.exists() || !directory.isDirectory()) {
+                logger.error("Invalid directory path: {}", directoryPath);
+                return sqlContents;
+            }
+
+            File[] folders = directory.listFiles(File::isDirectory);
+            if (folders != null) {
+                for (File folder : folders) {
+                    logger.info("Processing folder: {}", folder.getName());
+                    Path folderPath = Paths.get(folder.getPath());
+                    Files.walk(folderPath)
+                            .filter(Files::isRegularFile)
+                            .filter(path -> path.toString().endsWith(".sql"))
+                            .forEach(path -> {
+                                try {
+                                    String content = Files.readString(path);
+                                    sqlContents.add(content);
+                                    logger.info("Read SQL file: {}", path.getFileName());
+                                } catch (IOException e) {
+                                    logger.error("Error reading SQL file: {}", path, e);
+                                }
+                            });
+                }
+            }
+        } catch (IOException e) {
+            logger.error("Error processing directory: {}", directoryPath, e);
+        }
+        return sqlContents;
     }
 }

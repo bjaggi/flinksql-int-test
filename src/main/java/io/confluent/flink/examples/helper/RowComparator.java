@@ -1,13 +1,15 @@
 package io.confluent.flink.examples.helper;
 
 import org.apache.flink.types.Row;
-
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RowComparator {
+    private static final Logger logger = LoggerFactory.getLogger(RowComparator.class);
     
     /**
      * Compares two Flink Row objects for equality
@@ -25,9 +27,9 @@ public class RowComparator {
             Object actualField = actual.getField(i);
 
             if (!Objects.equals(expectedField, actualField)) {
-                System.out.println("Field mismatch at position " + i + ":");
-                System.out.println("Expected: " + expectedField);
-                System.out.println("Actual: " + actualField);
+                logger.info("Field mismatch at position {}:", i);
+                logger.info("Expected: {}", expectedField);
+                logger.info("Actual: {}", actualField);
                 return false;
             }
         }
