@@ -15,6 +15,27 @@ This directory contains the test setup for store product functionality.
 - `expected_op.csv`: Contains the expected output data for validation
 - `external-digital-products-store-product-insert.sql`: Contains the external table creation and data insertion statements
 
+## Test Flow
+
+1. The test reads expected data from CSV files in each subdirectory
+2. For each subdirectory:
+   - Reads the expected output CSV file
+   - Validates the file exists
+   - Imports the data for comparison
+3. Executes the Hybris store product query
+4. Compares the actual results with expected results
+5. Logs detailed comparison information for each row
+6. Cleans up by dropping temporary tables
+
+## Logging
+
+The test provides detailed logging:
+- Directory and file operations
+- Data import status
+- Query execution details
+- Row-by-row comparison results
+- Visual separators between test sections
+
 ## Usage
 
 1. Run `create_tables.sql` to set up the required tables
