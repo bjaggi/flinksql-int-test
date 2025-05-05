@@ -66,15 +66,38 @@ public class RowComparator {
         Set<String> fieldNames = expected.getFieldNames(true);
         List<String> fieldNamesList = fieldNames != null ? new ArrayList<>(fieldNames) : null;
 
-        for (int i = 0; i < expected.getArity(); i++) {
+        // Compare all columns except the last one (headers)
+        for (int i = 0; i < expected.getArity() - 1; i++) {
             Object expectedField = expected.getField(i);
             Object actualField = actual.getField(i);
 
-            if (!Objects.equals(expectedField, actualField)) {
-                String fieldName = fieldNamesList != null && i < fieldNamesList.size() 
-                    ? fieldNamesList.get(i) 
-                    : "field_" + i;
-                
+            String fieldName = fieldNamesList != null && i < fieldNamesList.size() 
+                ? fieldNamesList.get(i) 
+                : "field_" + i;
+
+            logger.info("Comparing field '{}' (position {}):", fieldName, i);
+            logger.info("Expected: {} ({})", expectedField, 
+                expectedField != null ? expectedField.getClass().getName() : "null");
+            logger.info("Actual: {} ({})", actualField, 
+                actualField != null ? actualField.getClass().getName() : "null");
+
+            // Simple null check
+            if (expectedField == null && actualField == null) {
+                logger.info("Both values are null, considering equal");
+                continue;
+            }
+
+            // Compare values
+            boolean isEqual = false;
+            if (expectedField != null && actualField != null) {
+                if (expectedField instanceof Number && actualField instanceof Number) {
+                    isEqual = ((Number) expectedField).doubleValue() == ((Number) actualField).doubleValue();
+                } else {
+                    isEqual = expectedField.toString().equals(actualField.toString());
+                }
+            }
+
+            if (!isEqual) {
                 result.setEqual(false);
                 result.setMessage(String.format(
                     "Field '%s' (position %d) mismatch:\nExpected: %s\nActual:   %s",

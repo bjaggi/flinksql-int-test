@@ -11,9 +11,9 @@ public class Main {
 
     public static void main(String[] args) {
         logger.info("Starting Flink Integration Tests");
-        EnvironmentSettings settings = EnvironmentSettings.newInstance().inStreamingMode().build();
-        TableEnvironment env = TableEnvironment.create(settings);
-        SqlReader.listResources(env);
+        // EnvironmentSettings settings = EnvironmentSettings.newInstance().inStreamingMode().build();
+        //TableEnvironment env = TableEnvironment.create(settings);
+        //SqlReader.listResources(env);
     }
 
     // private static void loadSqlFromFile(String path) {

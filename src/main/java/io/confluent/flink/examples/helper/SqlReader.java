@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.apache.flink.table.api.TableEnvironment;
 import org.apache.flink.table.api.EnvironmentSettings;
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import io.confluent.flink.examples.helper.TestConstants.*;
 
 public class SqlReader {
     private static final Logger logger = LoggerFactory.getLogger(SqlReader.class);
@@ -30,12 +32,39 @@ public class SqlReader {
             // Read data types (third line)
             String[] dataTypes = br.readLine().split(",");
             
+            // Validate column count matches between names and types
+            if (columnNames.length != dataTypes.length) {
+                throw new IllegalArgumentException(
+                    String.format("Column count mismatch: %d column names but %d data types in file %s",
+                        columnNames.length, dataTypes.length, csvFile));
+            }
+            
+            // Validate each data type ( this has issues with comments)
+            // for (int i = 0; i < dataTypes.length; i++) {
+            //     String dataType = dataTypes[i].trim().toUpperCase();
+            //     if (!isValidDataType(dataType)) {
+            //         throw new IllegalArgumentException(
+            //             String.format("Invalid data type '%s' for column '%s' in file %s",
+            //                 dataType, columnNames[i], csvFile));
+            //     }
+            // }
+            
             // Read and store the data
             List<String[]> data = new ArrayList<>();
             String line;
             while ((line = br.readLine()) != null) {
-                data.add(line.split(","));
+                String[] row = line.split(",");
+                // Validate each row has correct number of columns
+                if (row.length != columnNames.length) {
+                    throw new IllegalArgumentException(
+                        String.format("Row has %d columns but expected %d columns in file %s",
+                            row.length, columnNames.length, csvFile));
+                }
+                data.add(row);
             }
+            
+            logger.info("Successfully validated CSV file {} with {} columns and {} rows",
+                csvFile, columnNames.length, data.size());
             
             return new TableInfo(tableName, 
                             Arrays.asList(columnNames), 
@@ -56,14 +85,27 @@ public class SqlReader {
         }
     }
 
-    protected void deleteTables( TableEnvironment env) {
-    
-            try {
-                env.executeSql(TestConstants.DROP_TABLES_SQL).await();
-            } catch (Exception e) {
-                logger.error("Unable to delete table/s: ",  e);
+    private static String readSqlFromFile(File file) throws IOException {
+        StringBuilder sqlBuilder = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (!line.trim().isEmpty()) {
+                    sqlBuilder.append(line).append("\n");
+                }
             }
-        //}
+        }
+        return sqlBuilder.toString();
+    }
+
+    protected static void deleteTables(File file, TableEnvironment env) {
+        try {
+            String sql = readSqlFromFile(file);
+            env.executeSql(sql).await();
+            logger.info("Successfully deleted table/s");
+        } catch (Exception e) {
+            logger.error("Unable to delete table/s: ",  e);
+        }
     }
 
     private static void insertData(File file, TableEnvironment env) {
@@ -84,8 +126,91 @@ public class SqlReader {
         }
     }
 
-    private static void createTable(File file) {
-        // Implementation needed
+    private static void validateSqlSchema(String sql) {
+        // Extract column definitions from CREATE TABLE statement
+        Pattern createTablePattern = Pattern.compile("CREATE\\s+TABLE\\s+[^(]*\\((.*)\\)", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+        java.util.regex.Matcher matcher = createTablePattern.matcher(sql);
+        
+        if (matcher.find()) {
+            String columnDefinitions = matcher.group(1);
+            String[] columns = columnDefinitions.split(",");
+            
+            // Count columns and validate data types
+            int columnCount = 0;
+            for (String column : columns) {
+                column = column.trim();
+                if (!column.isEmpty() && !column.startsWith("PRIMARY KEY") && !column.startsWith("CONSTRAINT")) {
+                    columnCount++;
+                    // Split by whitespace but keep quoted identifiers together
+                    List<String> parts = new ArrayList<>();
+                    Pattern pattern = Pattern.compile("([^\\s]+)|'([^']*)'|`([^`]*)`");
+                    java.util.regex.Matcher partMatcher = pattern.matcher(column);
+                    while (partMatcher.find()) {
+                        String part = partMatcher.group();
+                        if (part != null && !part.isEmpty()) {
+                            parts.add(part);
+                        }
+                    }
+                    
+                    if (parts.size() < 2) {
+                        throw new IllegalArgumentException("Invalid column definition: " + column);
+                    }
+                    
+                    // Find the data type part (it's the first word after the column name)
+                    String dataType = null;
+                    for (int i = 1; i < parts.size(); i++) {
+                        String part = parts.get(i).toUpperCase();
+                        if (isValidDataType(part)) {
+                            dataType = part;
+                            break;
+                        }
+                    }
+                    
+                    if (dataType == null) {
+                        throw new IllegalArgumentException("No valid data type found in column definition: " + column);
+                    }
+                }
+            }
+            
+            if (columnCount == 0) {
+                throw new IllegalArgumentException("No columns defined in CREATE TABLE statement");
+            }
+            
+            logger.info("Validated SQL schema with {} columns", columnCount);
+        } else {
+            throw new IllegalArgumentException("Invalid CREATE TABLE statement format");
+        }
+    }
+
+    private static boolean isValidDataType(String dataType) {
+        // List of valid Flink SQL data types
+        String[] validTypes = {
+            "BOOLEAN", "TINYINT", "SMALLINT", "INT", "BIGINT", "FLOAT", "DOUBLE", "DECIMAL",
+            "VARCHAR", "CHAR", "STRING", "BINARY", "VARBINARY", "BYTES",
+            "DATE", "TIME", "TIMESTAMP", "TIMESTAMP_LTZ",
+            "ARRAY", "MAP", "MULTISET", "ROW",
+            "RAW", "NULL"
+        };
+        
+        // Check if the data type starts with any valid type
+        for (String type : validTypes) {
+            if (dataType.startsWith(type)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void createTable(File file, TableEnvironment env) {
+        try {
+            String sql = readSqlFromFile(file);
+            //validateSqlSchema(sql);
+            env.executeSql(sql).await(10, TimeUnit.SECONDS);
+            logger.info("Successfully created table with validated schema");
+        } catch (Exception e) {
+            logger.error("Unable to create table/s: ", e);
+            throw new RuntimeException("Failed to create table: " + e.getMessage(), e);
+        }
     }
 
     private static String getResourcesPath() {
@@ -105,37 +230,37 @@ public class SqlReader {
         return "src/main/resources/execute_tests";
     }
 
-    public static void listResources(TableEnvironment env) {
-        String resourcesPath = getResourcesPath();
-        File resourcesDir = new File(resourcesPath);
+    public static void setUpResourcesForTest(TableEnvironment env, String testFolderPathString) {
+        File resourcesDir = new File(testFolderPathString);
         
         if (resourcesDir.exists() && resourcesDir.isDirectory()) {
-            File[] folders = resourcesDir.listFiles(File::isDirectory);
-            logger.info("Found {} folders in the resources directory.", folders.length);
-            for (File folder : folders) {
-                logger.info("{}", folder);
-            }
-            logger.info("\n\n");
-            
-            if (folders != null) {
-                for (File folder : folders) {
-                    logger.info("Starting to execute tests in Folder: {}", folder.getName());
-                    logger.info("");
-                    File[] files = folder.listFiles(File::isFile);
-                    if (files != null) {
-                        for (File file : files) {
-                            logger.info("Found file: {}", file.getName());
-                            if (file.getName().contains(String.valueOf("insert_data").toLowerCase())) {                                    
-                                logger.info("  Inserting data from file: {}", file.getName());
-                                insertData(file, env);
-                            } else if (file.getName().contains(String.valueOf(".sql").toLowerCase())) {
-                                logger.info("  Executing the query present in the file: {}", file.getName());
-                                createTable(file);
-                            } else {
-                                logger.info("  Skipping file: {}", file.getName());
-                            }
-                            logger.info("");
-                        }
+            File[] files = resourcesDir.listFiles(File::isFile);
+            if (files != null) {
+                
+                // First process delete files
+                for (File file : files) {
+                    if (file.getName().contains(TestConstants.DROP_TABLES_SQL.toLowerCase())) {
+                        logger.info("Found File : {}", file.getName());
+                        logger.info(" Executing {} to Delete all tables ", file.getName());
+                        deleteTables(file, env);
+                    }
+                }
+                
+                // Then process create files
+                for (File file : files) {
+                    if (file.getName().contains(String.valueOf(TestConstants.CREATE_TABLES_SQL).toLowerCase())) {
+                        logger.info("Found File : {}", file.getName());
+                        logger.info(" Executing {} to Create all tables ", file.getName());
+                        createTable(file, env);
+                    }
+                }
+                
+                // Finally process insert files
+                for (File file : files) {
+                    if (file.getName().contains(String.valueOf(TestConstants.INSERT_DATA_SQL).toLowerCase())) {
+                        logger.info("Found File : {}", file.getName());
+                        logger.info(" Executing {} to Insert data into all tables ", file.getName());
+                        insertData(file, env);
                     }
                 }
             }

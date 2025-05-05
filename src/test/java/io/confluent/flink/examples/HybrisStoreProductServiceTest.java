@@ -35,10 +35,8 @@ public class HybrisStoreProductServiceTest extends FlinkIntegrationTest {
         EnvironmentSettings settings = ConfluentSettings.fromResource("/cloud.properties");
         TableEnvironment env = TableEnvironment.create(settings);
 
-        logger.info("Starting Flink Integration Tests!");
-        logger.info("Initializing test environment...");
-        SqlReader.listResources(env);
-        deleteTable(TestConstants.PRODUCTS_ELIGIBILITY_TABLE, env);
+       
+        
         hybrisStoreProductService = new HybrisStoreProductService(
                 env,
                 hybrisStoreProductTableName, hybrisStoreProductTableName
@@ -64,6 +62,12 @@ public class HybrisStoreProductServiceTest extends FlinkIntegrationTest {
                 for (File subDir : subDirs) {
                     logger.info("\n\n" + breakline);    
                     logger.info("\n*** Processing all tests in the subdirectory *** : {}", subDir.getName());
+                    logger.info("Starting Flink Integration Tests!");
+                    logger.info("Initializing test environment...");
+                    String testFolderPathString = subDir.getPath() + File.separator;
+
+                    SqlReader.setUpResourcesForTest(env, testFolderPathString);
+
                     try {
                         String csvPath = subDir.getPath() + File.separator + TestConstants.EXPECTED_OUTPUT_CSV;
                         logger.info("Reading CSV file from: {}", csvPath);
@@ -80,42 +84,71 @@ public class HybrisStoreProductServiceTest extends FlinkIntegrationTest {
                         logger.error("Failed to read expected data from {}: {}", subDir.getName(), e.getMessage(), e);
                     }
 
+                    // Execute the query.
+                    logger.info("Executing query from file.");
+                    TableResult results = hybrisStoreProductService.executeHybrisStoreProductQuery();
+                    logger.info("Table API job id: {}", results.getJobClient().stream().toList());
 
+                    // Fetch the actual results.
+                    List<Row> actualData = fetchRows(results)
+                            .limit(expectedOpFromFile.size())
+                            .toList();
 
-
-
-                     // Execute the query.
-        TableResult results = hybrisStoreProductService.executeHybrisStoreProductQuery();
-        logger.info("Table API job id: {}", results.getJobClient().stream().toList());
-
-        // Fetch the actual results.
-        List<Row> actualData = fetchRows(results)
-                .limit(expectedOpFromFile.size())
-                .toList();
-
-        // Compare results using the new comparator
-        for (int i = 0; i < expectedOpFromFile.size(); i++) {
-            logger.info("\nComparing Row {}:", i);
-            logger.info("Expected: {}", expectedOpFromFile.get(i));
-            logger.info("Actual:   {}", actualData.get(i));
-            
-            RowComparator.ComparisonResult comparison = RowComparator.compareRows(expectedOpFromFile.get(i), actualData.get(i));
-            
-            boolean assertionResult = comparison.isEqual();
-            logger.info("Assertion Result: {}", (assertionResult ? "PASSED" : "FAILED"));
-            if (!assertionResult) {
-                logger.error("Failure Message: {}", comparison.getMessage());
-            }
-            
-            assertTrue(assertionResult, "Row " + i + " comparison failed: " + comparison.getMessage());
-        }
+                    // Compare results using the new comparator, excluding headers column
+                    for (int i = 0; i < expectedOpFromFile.size(); i++) {
+                        logger.info("\nComparing Row {}:", i);
+                        Row expectedRow = expectedOpFromFile.get(i);
+                        Row actualRow = actualData.get(i);
+                        
+                        // Create new rows without the headers column (last column)
+                        Row expectedWithoutHeaders = Row.of(
+                            expectedRow.getField(0),  // upcId
+                            expectedRow.getField(1),  // storeId
+                            expectedRow.getField(2),  // productId
+                            expectedRow.getField(3),  // upcTypeName
+                            expectedRow.getField(4),  // stockStatus
+                            expectedRow.getField(5),  // stockStatusId
+                            expectedRow.getField(6),  // storeBOH
+                            expectedRow.getField(7),  // ilcPrimary
+                            expectedRow.getField(8),  // ilcs
+                            expectedRow.getField(9),  // isNewIlc
+                            expectedRow.getField(10), // isEligible
+                            expectedRow.getField(11)  // isInStoreOnly
+                        );
+                        
+                        Row actualWithoutHeaders = Row.of(
+                            actualRow.getField(0),    // upcId
+                            actualRow.getField(1),    // storeId
+                            actualRow.getField(2),    // productId
+                            actualRow.getField(3),    // upcTypeName
+                            actualRow.getField(4),    // stockStatus
+                            actualRow.getField(5),    // stockStatusId
+                            actualRow.getField(6),    // storeBOH
+                            actualRow.getField(7),    // ilcPrimary
+                            actualRow.getField(8),    // ilcs
+                            actualRow.getField(9),    // isNewIlc
+                            actualRow.getField(10),   // isEligible
+                            actualRow.getField(11)    // isInStoreOnly
+                        );
+                        
+                        logger.info("Expected: {}", expectedWithoutHeaders);
+                        logger.info("Actual:   {}", actualWithoutHeaders);
+                        
+                        RowComparator.ComparisonResult comparison = RowComparator.compareRows(expectedWithoutHeaders, actualWithoutHeaders);
+                        
+                        boolean assertionResult = comparison.isEqual();
+                        logger.info("Assertion Result: {}", (assertionResult ? "PASSED" : "FAILED"));
+                        if (!assertionResult) {
+                            logger.error("Failure Message: {}", comparison.getMessage());
+                        }
+                        
+                        assertTrue(assertionResult, "Row " + i + " comparison failed: " + comparison.getMessage());
+                    }
                 }
             }
         } else {
             logger.error("Base directory does not exist or is not a directory: {}", basePath);
         }
-
-       
     }
 
     protected void deleteTable(String tableName, TableEnvironment env) {

@@ -19,33 +19,55 @@ public class DataImporter {
      */
     public static List<Row> importFromCSV(String filePath) throws IOException {
         List<Row> rows = new ArrayList<>();
+        logger.info("Reading from CSV : {}", filePath);
         
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             // Read header with data types
             String headerLine = reader.readLine();
             if (headerLine == null) {
+                logger.error("Empty CSV file: {}", filePath);
                 throw new IOException("Empty CSV file");
             }
             
+            String[] headerTypes = headerLine.split(",");
+            int expectedColumns = headerTypes.length;
+            logger.info("Found {} columns in header: {}", expectedColumns, String.join(", ", headerTypes));
+            
             // Read data rows
             String line;
+            int rowCount = 0;
             while ((line = reader.readLine()) != null) {
+                rowCount++;
                 String[] values = line.split(",");
-                Object[] rowData = new Object[values.length];
+                Object[] rowData = new Object[expectedColumns];
                 
-                for (int i = 0; i < values.length; i++) {
+                // Fill in values up to the minimum length
+                int minLength = Math.min(values.length, expectedColumns);
+                logger.debug("Processing row {} with {} values (expected {})", rowCount, values.length, expectedColumns);
+                
+                for (int i = 0; i < minLength; i++) {
                     String value = values[i].trim();
                     if (value.isEmpty()) {
                         rowData[i] = null;
+                        logger.debug("Column {} is empty, setting to null", i);
                     } else {
-                        // Convert value based on type from header
-                        String type = headerLine.split(",")[i].trim();
-                        rowData[i] = convertValue(value, type);
+                        rowData[i] = convertValue(value, headerTypes[i].trim());
+                        logger.debug("Column {}: converted '{}' to type {}", i, value, headerTypes[i].trim());
                     }
+                }
+                
+                // Fill remaining columns with null if data row is shorter than header
+                for (int i = minLength; i < expectedColumns; i++) {
+                    rowData[i] = null;
+                    logger.debug("Column {}: no data, setting to null", i);
                 }
                 
                 rows.add(Row.of(rowData));
             }
+            logger.info("Successfully imported {} rows from CSV", rowCount);
+        } catch (Exception e) {
+            logger.error("Error importing CSV from {}: {}", filePath, e.getMessage(), e);
+            throw e;
         }
         
         return rows;

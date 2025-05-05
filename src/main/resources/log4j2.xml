@@ -20,8 +20,11 @@
             <AppenderRef ref="Console"/>
             <AppenderRef ref="RollingFile"/>
         </Root>
+        
+        <!-- <Logger name="io.confluent.flink.examples" level="info"/> -->
+        <Logger name="io.confluent.flink.examples" level="debug"/>
+         <Logger name="io.confluent.flink.examples.helper" level="debug"/> 
         <Logger name="org.apache.flink" level="info"/>
-        <Logger name="io.confluent" level="info"/>
         <Logger name="org.apache.kafka" level="info"/>
     </Loggers>
 </Configuration> 
