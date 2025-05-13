@@ -50,11 +50,7 @@ public class RowComparator {
             return result;
         }
         
-        if (expected == null || actual == null) {
-            result.setEqual(false);
-            result.setMessage("One of the rows is null");
-            return result;
-        }
+
         
         if (expected.getArity() != actual.getArity()) {
             result.setEqual(false);
@@ -82,13 +78,14 @@ public class RowComparator {
                 actualField != null ? actualField.getClass().getName() : "null");
 
             // Simple null check
-            if (expectedField == null && actualField == null) {
+            if ((expectedField == null || "null".equalsIgnoreCase(expectedField.toString())) && (actualField == null || "null".equalsIgnoreCase(actualField.toString()))) {
                 logger.info("Both values are null, considering equal");
                 continue;
             }
 
             // Compare values
             boolean isEqual = false;
+
             if (expectedField != null && actualField != null) {
                 if (expectedField instanceof Number && actualField instanceof Number) {
                     isEqual = ((Number) expectedField).doubleValue() == ((Number) actualField).doubleValue();

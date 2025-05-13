@@ -4,18 +4,15 @@ import org.apache.flink.table.api.*;
 
 public class HybrisStoreProductService {
     private final TableEnvironment env;
-    private final String ordersTableName;
-    private final String freeShippingTableName;
+
     public static final String hybrisStoreProductTableName = "`Development`.`Digital-Public-Development`.`hybris-store-product-stock`";
 
-    public HybrisStoreProductService(
-        TableEnvironment env,
-        String ordersTableName,
-        String freeShippingTableName
-    ) {
-        this.env = env;
-        this.ordersTableName = ordersTableName;
-        this.freeShippingTableName = freeShippingTableName;
+    public HybrisStoreProductService( TableEnvironment env ) {
+        this.env = env;        
+    }
+
+    public TableResult executeHybrisStoreProductQuery(String sqlString) {
+        return env.executeSql(sqlString);
     }
 
     public TableResult executeHybrisStoreProductQuery() {

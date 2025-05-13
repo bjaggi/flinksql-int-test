@@ -17,6 +17,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import io.confluent.flink.examples.helper.TestConstants.*;
+import org.apache.flink.table.api.TableResult;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 public class SqlReader {
     private static final Logger logger = LoggerFactory.getLogger(SqlReader.class);
@@ -73,15 +76,15 @@ public class SqlReader {
         }
     }
 
-    private static void executeSql(String sql, TableEnvironment env) {
+    private static TableResult executeSql(String sql, TableEnvironment env) {
         if (sql == null || sql.trim().isEmpty()) {
-            return;
+            return null;
         }
         try {
-            env.executeSql(sql).await();
-            logger.info("Successfully executed SQL");
+            return env.executeSql(sql);
         } catch (Exception e) {
             logger.error("Error executing SQL: {}", e.getMessage(), e);
+            return null;
         }
     }
 
@@ -100,11 +103,21 @@ public class SqlReader {
 
     protected static void deleteTables(File file, TableEnvironment env) {
         try {
-            String sql = readSqlFromFile(file);
-            env.executeSql(sql).await();
-            logger.info("Successfully deleted table/s");
+            File[] files = file.listFiles(File::isFile);
+
+            if (files != null) {
+                logger.info("Found {} SQL files to execute in {} folder", files.length, file.getName());
+                for (File sqlFile : files) {
+                    logger.info("Executing SQL from file: {}", sqlFile.getName());
+                    String sql = readSqlFromFile(sqlFile);
+                      executeSql(sql, env).await();;
+                      logger.info("Sucessfully Drop tables mentioned in the file: {}", sqlFile.getName());
+                }
+            } else {
+                logger.info("No SQL files found in {} folder");
+            }
         } catch (Exception e) {
-            logger.error("Unable to delete table/s: ",  e);
+            logger.error("Unable to delete table/s: ", e);
         }
     }
 
@@ -123,6 +136,29 @@ public class SqlReader {
             executeSql(sql, env);
         } catch (IOException e) {
             logger.error("Error reading file: {}", file.getPath(), e);
+        }
+    }
+
+    public static TableResult executeQuery(File file, TableEnvironment env) {
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            StringBuilder sqlBuilder = new StringBuilder();
+            String line;
+            
+            while ((line = br.readLine()) != null) {
+                if (!line.trim().isEmpty()) {
+                    sqlBuilder.append(line).append("\n");
+                }
+            }
+            
+            String sql = sqlBuilder.toString();
+            TableResult result = executeSql(sql, env);
+            if (result != null) {
+                result.await(30, TimeUnit.SECONDS);
+            }
+            return result;
+        } catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
+            logger.error("Error executing query: {}", file.getPath(), e);
+            return null;
         }
     }
 
@@ -203,14 +239,25 @@ public class SqlReader {
 
     private static void createTable(File file, TableEnvironment env) {
         try {
-            String sql = readSqlFromFile(file);
-            //validateSqlSchema(sql);
-            env.executeSql(sql).await(10, TimeUnit.SECONDS);
-            logger.info("Successfully created table with validated schema");
+            File[] files = file.listFiles(File::isFile);
+
+            if (files != null) {
+                logger.info("Found {} SQL files to execute in {} folder", files.length, file.getName());
+                for (File sqlFile : files) {
+                    logger.info("Executing SQL from file: {}", sqlFile.getName());
+                    String sql = readSqlFromFile(sqlFile);
+                      executeSql(sql, env).await();;
+                      logger.info("Sucessfully Created tables from from file: {}", sqlFile.getName());
+                }
+            } else {
+                logger.info("No SQL files found in {} folder");
+            }
         } catch (Exception e) {
             logger.error("Unable to create table/s: ", e);
-            throw new RuntimeException("Failed to create table: " + e.getMessage(), e);
         }
+
+
+        
     }
 
     private static String getResourcesPath() {
@@ -235,25 +282,26 @@ public class SqlReader {
         
         if (resourcesDir.exists() && resourcesDir.isDirectory()) {
             File[] files = resourcesDir.listFiles(File::isFile);
+            File[] subDirectories = resourcesDir.listFiles(File::isDirectory);
             if (files != null) {
                 
                 // First process delete files
-                for (File file : files) {
-                    if (file.getName().contains(TestConstants.DROP_TABLES_SQL.toLowerCase())) {
-                        logger.info("Found File : {}", file.getName());
-                        logger.info(" Executing {} to Delete all tables ", file.getName());
-                        deleteTables(file, env);
+                for (File subDirectory : subDirectories) {
+                    if (subDirectory.getName().equalsIgnoreCase(TestConstants.DROP_TABLES_DIRECTORY.toLowerCase())) {
+                        logger.info(" Executing to delete all tables in the {} ", subDirectory.getName());
+                        deleteTables(subDirectory, env);
                     }
+                // Then process create files
+                    if (subDirectory.getName().equalsIgnoreCase(TestConstants.CREATE_TABLES_DIRECTORY.toLowerCase())) {
+                        logger.info("Found subdirectory : {}", subDirectory.getName());
+                        logger.info(" Will start executing all SQL files in the {} folder to Create all tables ", subDirectory.getName());
+                        createTable(subDirectory, env);
+                    }
+
                 }
                 
-                // Then process create files
-                for (File file : files) {
-                    if (file.getName().contains(String.valueOf(TestConstants.CREATE_TABLES_SQL).toLowerCase())) {
-                        logger.info("Found File : {}", file.getName());
-                        logger.info(" Executing {} to Create all tables ", file.getName());
-                        createTable(file, env);
-                    }
-                }
+         
+         
                 
                 // Finally process insert files
                 for (File file : files) {
@@ -299,5 +347,32 @@ public class SqlReader {
             logger.error("Error processing directory: {}", directoryPath, e);
         }
         return sqlContents;
+    }
+
+    public static void printDirectoryStructure(String directoryPath) {
+        File directory = new File(directoryPath);
+        if (!directory.exists() || !directory.isDirectory()) {
+            logger.error("Invalid directory path: {}", directoryPath);
+            return;
+        }
+
+        logger.info("\nDirectory Structure for: {}", directoryPath);
+        printDirectoryContents(directory, 0);
+    }
+
+    private static void printDirectoryContents(File directory, int level) {
+        String indent = "  ".repeat(level);
+        File[] files = directory.listFiles();
+        
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    logger.info("{}📁 {}", indent, file.getName());
+                    printDirectoryContents(file, level + 1);
+                } else {
+                    logger.info("{}📄 {}", indent, file.getName());
+                }
+            }
+        }
     }
 }

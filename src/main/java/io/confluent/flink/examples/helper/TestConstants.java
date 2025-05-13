@@ -3,9 +3,10 @@ package io.confluent.flink.examples.helper;
 public class TestConstants {
     // File names
     public static final String EXPECTED_OUTPUT_CSV = "expected_op.csv";
-    public static final String CREATE_TABLES_SQL = "create_tables.sql";
-    public static final String DROP_TABLES_SQL = "drop_tables.sql";
+    public static final String CREATE_TABLES_DIRECTORY = "create_tables";
+    public static final String DROP_TABLES_DIRECTORY = "drop_tables";
     public static final String INSERT_DATA_SQL = "insert_data.sql";
+    public static final String QUERY_FILE_NAME = "execute_query.sql";
 
     // Table names
     public static final String PRODUCTS_ELIGIBILITY_TABLE = "Development.Digital-Public-Development.shared.digital.products.eligibility";

@@ -8,6 +8,7 @@ import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.TableEnvironment;
 import io.confluent.flink.plugin.ConfluentSettings;
 import io.confluent.flink.examples.helper.SqlReader;
+import io.confluent.flink.examples.helper.SqlReader.*;
 import io.confluent.flink.examples.helper.RowComparator;
 import io.confluent.flink.examples.helper.DataExporter;
 import io.confluent.flink.examples.helper.DataImporter;
@@ -35,37 +36,42 @@ public class HybrisStoreProductServiceTest extends FlinkIntegrationTest {
         EnvironmentSettings settings = ConfluentSettings.fromResource("/cloud.properties");
         TableEnvironment env = TableEnvironment.create(settings);
 
-       
-        
-        hybrisStoreProductService = new HybrisStoreProductService(
-                env,
-                hybrisStoreProductTableName, hybrisStoreProductTableName
-        );
+               
+        hybrisStoreProductService = new HybrisStoreProductService(env);
     }
 
     @Test
     @Timeout(240)
+    //@setUpResourcesForTest()
     public void hybrisQueryTest() throws Exception {
         // Read expected data from CSV files
         List<Row> expectedOpFromFile = new ArrayList<>();
         String basePath = "src/main/resources/execute_tests";
         File baseDir = new File(basePath);
         logger.info("Base directory path: {}", baseDir.getAbsolutePath());
-        logger.info("Base directory exists: {}", baseDir.exists());
-        logger.info("Base directory is directory: {}", baseDir.isDirectory());
+
 
         if (baseDir.exists() && baseDir.isDirectory()) {
             File[] subDirs = baseDir.listFiles(File::isDirectory);
-            logger.info("Number of subdirectories found: {}", (subDirs != null ? subDirs.length : 0));
+            logger.info("Found {}  subdirectories under execute_tests folder   ", (subDirs != null ? subDirs.length : 0));
             
             if (subDirs != null) {
+                logger.info("\nAll subdirectories in {}:", basePath);   
+                logger.info(" Will now start processing all tests in the subdirectories under {} folder", basePath);
+             
+                for (File dir : subDirs) {
+                    logger.info("📁 {}", dir.getName());
+                }
+                
                 for (File subDir : subDirs) {
                     logger.info("\n\n" + breakline);    
-                    logger.info("\n*** Processing all tests in the subdirectory *** : {}", subDir.getName());
-                    logger.info("Starting Flink Integration Tests!");
-                    logger.info("Initializing test environment...");
-                    String testFolderPathString = subDir.getPath() + File.separator;
+                    logger.info("Starting Flink Integration Tests for subdirectory: {}", subDir.getName());
+                    logger.info("");
 
+                    logger.info("Here is the list of all sub directories & files under {}...", subDir.getName());
+                    String testFolderPathString = subDir.getPath() + File.separator;
+                    SqlReader.printDirectoryStructure(testFolderPathString);
+                    // This is where the tables are dropped,  created & data is inserted
                     SqlReader.setUpResourcesForTest(env, testFolderPathString);
 
                     try {
@@ -85,8 +91,9 @@ public class HybrisStoreProductServiceTest extends FlinkIntegrationTest {
                     }
 
                     // Execute the query.
-                    logger.info("Executing query from file.");
-                    TableResult results = hybrisStoreProductService.executeHybrisStoreProductQuery();
+                    logger.info("Executing query from file {}{}.", testFolderPathString, TestConstants.QUERY_FILE_NAME);
+                    File executeSqlFile = new File(testFolderPathString, TestConstants.QUERY_FILE_NAME);
+                    TableResult results = SqlReader.executeQuery(executeSqlFile, env);
                     logger.info("Table API job id: {}", results.getJobClient().stream().toList());
 
                     // Fetch the actual results.
