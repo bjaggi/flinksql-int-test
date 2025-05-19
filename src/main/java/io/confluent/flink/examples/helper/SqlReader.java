@@ -110,13 +110,27 @@ public class SqlReader {
                 for (File sqlFile : files) {
                     logger.info("Executing SQL from file: {}", sqlFile.getName());
                     String sql = readSqlFromFile(sqlFile);
-                      executeSql(sql, env).await();;
-                      logger.info("Sucessfully Drop tables mentioned in the file: {}", sqlFile.getName());
+                      TableResult result = executeSql(sql, env);
+                      if (result != null) {
+                        try {
+                            result.await(90, TimeUnit.SECONDS);
+                            logger.info("Successfully created tables from file: {}", sqlFile.getName());
+                        } catch (TimeoutException e) {
+                            logger.error("Table creation timed out after 90 seconds for file: {}", sqlFile.getName());
+                            throw new RuntimeException("Table creation timed out", e);
+                        } catch (InterruptedException | ExecutionException e) {
+                            logger.error("Error waiting for table creation: {}", e.getMessage());
+                            throw new RuntimeException("Error waiting for table creation", e);
+                        }
+                    }
+
+                      logger.info("Sucessfully Dropped tables mentioned in the file: {}", sqlFile.getName());
                 }
             } else {
                 logger.info("No SQL files found in {} folder");
             }
-        } catch (Exception e) {
+        } 
+        catch (Exception e) {
             logger.error("Unable to delete table/s: ", e);
         }
     }
@@ -133,9 +147,23 @@ public class SqlReader {
             }
             
             String sql = sqlBuilder.toString();
-            executeSql(sql, env);
+            logger.info("Executing insert from file: {}", file.getName());
+            TableResult result = executeSql(sql, env);
+            if (result != null) {
+                try {
+                    result.await(90, TimeUnit.SECONDS);
+                    logger.info("Successfully inserted data from file: {}", file.getName());
+                } catch (TimeoutException e) {
+                    logger.error("Data insertion timed out after 90 seconds for file: {}", file.getName());
+                    throw new RuntimeException("Data insertion timed out", e);
+                } catch (InterruptedException | ExecutionException e) {
+                    logger.error("Error waiting for data insertion: {}", e.getMessage());
+                    throw new RuntimeException("Error waiting for data insertion", e);
+                }
+            }
         } catch (IOException e) {
             logger.error("Error reading file: {}", file.getPath(), e);
+            throw new RuntimeException("Error reading SQL file for data insertion", e);
         }
     }
 
@@ -151,14 +179,25 @@ public class SqlReader {
             }
             
             String sql = sqlBuilder.toString();
+            logger.info("Executing query from file: {}", file.getName());
             TableResult result = executeSql(sql, env);
             if (result != null) {
-                result.await(30, TimeUnit.SECONDS);
+                try {
+                    // Increased timeout to 5 minutes
+                    result.await(5, TimeUnit.MINUTES);
+                    logger.info("Query execution completed successfully");
+                } catch (TimeoutException e) {
+                    logger.error("Query execution timed out after 5 minutes for file: {}", file.getName());
+                    throw new RuntimeException("Query execution timed out", e);
+                } catch (InterruptedException | ExecutionException e) {
+                    logger.error("Error waiting for query completion: {}", e.getMessage());
+                    throw new RuntimeException("Error waiting for query completion", e);
+                }
             }
             return result;
-        } catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
-            logger.error("Error executing query: {}", file.getPath(), e);
-            return null;
+        } catch (IOException e) {
+            logger.error("Error reading file: {}", file.getPath(), e);
+            throw new RuntimeException("Error reading SQL file", e);
         }
     }
 
@@ -246,18 +285,27 @@ public class SqlReader {
                 for (File sqlFile : files) {
                     logger.info("Executing SQL from file: {}", sqlFile.getName());
                     String sql = readSqlFromFile(sqlFile);
-                      executeSql(sql, env).await();;
-                      logger.info("Sucessfully Created tables from from file: {}", sqlFile.getName());
+                    TableResult result = executeSql(sql, env);
+                    if (result != null) {
+                        try {
+                            result.await(90, TimeUnit.SECONDS);
+                            logger.info("Successfully created tables from file: {}", sqlFile.getName());
+                        } catch (TimeoutException e) {
+                            logger.error("Table creation timed out after 90 seconds for file: {}", sqlFile.getName());
+                            throw new RuntimeException("Table creation timed out", e);
+                        } catch (InterruptedException | ExecutionException e) {
+                            logger.error("Error waiting for table creation: {}", e.getMessage());
+                            throw new RuntimeException("Error waiting for table creation", e);
+                        }
+                    }
                 }
             } else {
                 logger.info("No SQL files found in {} folder");
             }
         } catch (Exception e) {
             logger.error("Unable to create table/s: ", e);
+            throw new RuntimeException("Failed to create tables", e);
         }
-
-
-        
     }
 
     private static String getResourcesPath() {

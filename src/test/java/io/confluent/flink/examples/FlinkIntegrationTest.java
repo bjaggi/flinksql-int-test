@@ -99,16 +99,5 @@ public abstract class FlinkIntegrationTest {
         tablesToDelete.add(tableName);
     }
 
-    protected void createTemporaryTable(String fullyQualifiedTableName, String tableDefinition) {
-        logger.info("Creating temporary table: " + fullyQualifiedTableName);
-
-        try {
-            env.executeSql(tableDefinition).await();
-            deleteTableOnExit(fullyQualifiedTableName);
-
-            logger.info("Created temporary table: " + fullyQualifiedTableName);
-        } catch (Exception e) {
-            logger.error("Unable to create temporary table: " + fullyQualifiedTableName, e);
-        }
-    }
+    
 }
