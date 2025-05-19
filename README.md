@@ -83,8 +83,8 @@ src/
 
 ### Test Folder Contents
 Each test directory contains:
-- `create_tables.sql`: Creates necessary tables with Kafka connector settings
-- `drop_tables.sql`: Cleans up tables after testing
+- `drop_tables(📁)`: This can have miltiple files of sql, all will be exected to drop that flink table/s(refer sample structure). 
+- `create_tables📁`: This can have miltiple files of sql, all will be exected to create flink table/s(refer sample structure). 
 - `insert_data.sql`: Test data INSERT statements
 - `expected_op.csv`: Expected output data for validation
 
