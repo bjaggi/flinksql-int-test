@@ -5,9 +5,9 @@
   - [Table of Contents](#table-of-contents)
   - [Use Case](#use-case)
   - [Overview](#overview)
+  - [Test Folder Contents](#test-folder-contents)
   - [Components](#components)
   - [Test Resources Structure](#test-resources-structure)
-    - [Test Folder Contents](#test-folder-contents)
   - [Test Flow](#test-flow)
   - [Logging](#logging)
   - [Configuration](#configuration)
@@ -40,6 +40,15 @@ A Java-based testing framework that uses Flink's Table API to validate SQL queri
 - Automated test execution via GitHub Actions
 - Customizable test resource locations
 - Comprehensive assertion capabilities
+
+
+## Test Folder Contents
+Each test directory has the following structure:
+- `drop_tables(📁)`: This can have multiple files of sql, all will be executed to drop that flink table/s([refer sample structure](https://github.com/bjaggi/flinksql-int-test/tree/code_with_generic_framework/src/main/resources/execute_tests/products.price-current-release)). 
+- `create_tables📁`: This can have multiple files of sql, all will be executed to create flink table/s([refer sample structure](https://github.com/bjaggi/flinksql-int-test/tree/code_with_generic_framework/src/main/resources/execute_tests/products.price-current-release)). 
+- `insert_data.sql`: Test data INSERT statements
+- `execute_query.sql`: The real test query.
+- `expected_op.csv`: Expected output data for validation
 
 ## Components
 1. **Java Test Framework**
@@ -81,13 +90,7 @@ src/
             └── HybrisStoreProductServiceTest.java
 ```
 
-### Test Folder Contents
-Each test directory contains:
-- `drop_tables(📁)`: This can have multiple files of sql, all will be executed to drop that flink table/s([refer sample structure](https://github.com/bjaggi/flinksql-int-test/tree/code_with_generic_framework/src/main/resources/execute_tests/products.price-current-release)). 
-- `create_tables📁`: This can have multiple files of sql, all will be executed to create flink table/s([refer sample structure](https://github.com/bjaggi/flinksql-int-test/tree/code_with_generic_framework/src/main/resources/execute_tests/products.price-current-release)). 
-- `insert_data.sql`: Test data INSERT statements
-- `execute_query.sql`: The real test query.
-- `expected_op.csv`: Expected output data for validation
+
 
 ## Test Flow
 1. The test reads expected data from CSV files in each subdirectory
