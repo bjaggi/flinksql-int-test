@@ -5,9 +5,10 @@
   - [Table of Contents](#table-of-contents)
   - [Use Case](#use-case)
   - [Overview](#overview)
+  - [Test Resources Structure](#test-resources-structure)
+  - [Test Scenarios](#test-scenarios)
   - [Test Folder Contents](#test-folder-contents)
   - [Components](#components)
-  - [Test Resources Structure](#test-resources-structure)
   - [Test Flow](#test-flow)
   - [Logging](#logging)
   - [Configuration](#configuration)
@@ -41,28 +42,8 @@ A Java-based testing framework that uses Flink's Table API to validate SQL queri
 - Customizable test resource locations
 - Comprehensive assertion capabilities
 
-
-## Test Folder Contents
-Each test directory has the following structure:
-- `drop_tables(📁)`: This can have multiple files of sql, all will be executed to drop that flink table/s([refer sample structure](https://github.com/bjaggi/flinksql-int-test/tree/code_with_generic_framework/src/main/resources/execute_tests/products.price-current-release)). 
-- `create_tables📁`: This can have multiple files of sql, all will be executed to create flink table/s([refer sample structure](https://github.com/bjaggi/flinksql-int-test/tree/code_with_generic_framework/src/main/resources/execute_tests/products.price-current-release)). 
-- `insert_data.sql`: Test data INSERT statements
-- `execute_query.sql`: The real test query.
-- `expected_op.csv`: Expected output data for validation
-
-## Components
-1. **Java Test Framework**
-   - Unit tests in Java using JUnit
-   - Flink Table API integration
-   - Confluent Cloud connectivity
-
-2. **Test Resources**
-   - SQL files for data insertion
-   - Test case configurations
-   - Cloud connection properties
-
 ## Test Resources Structure
-The test resources are organized in the `src/main/resources/execute_tests` directory (configurable):
+The test resources are organized in the `src/main/resources/execute_tests` directory (configurable). This directory can contain multiple test scenarios, each representing a different test case or feature to validate.
 
 ```
 src/
@@ -76,8 +57,14 @@ src/
 │   │       │   └── TestConstants.java     # Test configuration constants
 │   │       └── HybrisStoreProductService.java
 │   └── resources/
-│       ├── execute_tests/                 # Test scenarios
-│       │   └── products.price-current-release/  # Test scenario 1 
+│       ├── execute_tests/                 # Root directory for all test scenarios
+│       │   ├── products.price-current-release/  # Test scenario 1
+│       │   │   ├── drop_tables/
+│       │   │   ├── create_tables/
+│       │   │   ├── insert_data.sql
+│       │   │   ├── execute_query.sql
+│       │   │   └── expected_op.csv
+│       │   └── another.test.scenario/     # Test scenario 2
 │       │       ├── drop_tables/
 │       │       ├── create_tables/
 │       │       ├── insert_data.sql
@@ -90,7 +77,33 @@ src/
             └── HybrisStoreProductServiceTest.java
 ```
 
+## Test Scenarios
+The framework supports multiple test scenarios, each in its own directory under `execute_tests/`. Each scenario represents a complete test case with its own set of tables, data, and expected results. This allows you to:
+- Test different features independently
+- Maintain separate test data for each scenario
+- Run specific scenarios as needed
+- Keep test resources organized by feature or use case
 
+## Test Folder Contents
+Each test scenario directory must follow this structure:
+- `drop_tables(📁)`: Contains SQL files to drop tables. Multiple files are supported and will be executed in sequence([refer sample structure](https://github.com/bjaggi/flinksql-int-test/tree/code_with_generic_framework/src/main/resources/execute_tests/products.price-current-release)). 
+- `create_tables📁`: Contains SQL files to create tables. Multiple files are supported and will be executed in sequence([refer sample structure](https://github.com/bjaggi/flinksql-int-test/tree/code_with_generic_framework/src/main/resources/execute_tests/products.price-current-release)). 
+- `insert_data.sql`: Contains INSERT statements to populate test data
+- `execute_query.sql`: The main query to be tested
+- `expected_op.csv`: Expected output data for validation
+
+The framework will automatically discover and execute all scenarios under the `execute_tests` directory, making it easy to add new test cases without modifying the test code.
+
+## Components
+1. **Java Test Framework**
+   - Unit tests in Java using JUnit
+   - Flink Table API integration
+   - Confluent Cloud connectivity
+
+2. **Test Resources**
+   - SQL files for data insertion
+   - Test case configurations
+   - Cloud connection properties
 
 ## Test Flow
 1. The test reads expected data from CSV files in each subdirectory
