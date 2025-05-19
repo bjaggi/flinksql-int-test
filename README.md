@@ -8,6 +8,8 @@
   - [Components](#components)
   - [Test Resources Structure](#test-resources-structure)
     - [Test Folder Contents](#test-folder-contents)
+  - [Test Flow](#test-flow)
+  - [Logging](#logging)
   - [Configuration](#configuration)
     - [Cloud Properties](#cloud-properties)
     - [Test Resources Location](#test-resources-location)
@@ -54,22 +56,29 @@ A Java-based testing framework that uses Flink's Table API to validate SQL queri
 The test resources are organized in the `src/main/resources/execute_tests` directory (configurable):
 
 ```
-execute_tests/
-├── digital-stores-insert/        # Digital store tests
-│   ├── create_tables.sql        # Table creation
-│   ├── drop_tables.sql         # Table cleanup
-│   ├── insert_data.sql         # Test data
-│   └── expected_op.csv         # Expected results
-├── store-eligibility-location/   # Eligibility tests
-│   ├── create_tables.sql
-│   ├── drop_tables.sql
-│   ├── insert_data.sql
-│   └── expected_op.csv
-└── store-product-test-setup/    # Product tests
-    ├── create_tables.sql
-    ├── drop_tables.sql
-    ├── insert_data.sql
-    └── expected_op.csv
+src/
+├── main/
+│   ├── java/
+│   │   └── io/confluent/flink/examples/
+│   │       ├── helper/
+│   │       │   ├── SqlReader.java         # SQL file operations and execution
+│   │       │   ├── RowComparator.java     # Row comparison utilities
+│   │       │   ├── DataImporter.java      # CSV data import utilities
+│   │       │   └── TestConstants.java     # Test configuration constants
+│   │       └── HybrisStoreProductService.java
+│   └── resources/
+│       ├── execute_tests/                 # Test scenarios
+│       │   └── products.price-current-release/  # Test scenario 1 
+│       │       ├── drop_tables/
+│       │       ├── create_tables/
+│       │       ├── insert_data.sql
+│       │       ├── execute_query.sql
+│       │       └── expected_op.csv
+│       └── cloud.properties               # Confluent Cloud configuration
+└── test/
+    └── java/
+        └── io/confluent/flink/examples/
+            └── HybrisStoreProductServiceTest.java
 ```
 
 ### Test Folder Contents

@@ -40,9 +40,39 @@ public class HybrisStoreProductServiceTest extends FlinkIntegrationTest {
         hybrisStoreProductService = new HybrisStoreProductService(env);
     }
 
+    /**
+     * This test executes all tests in the subdirectories under execute_tests folder.
+     * The test follows this sequence:
+     * 1. Drops all tables specified in the drop_tables folder
+     * 2. Creates all tables specified in the create_tables folder
+     * 3. Inserts data from the insert_data folder
+     * 4. Executes the query from query.sql
+     * 5. Compares results with expected_op.csv
+     * 
+     * Directory Structure:
+     * execute_tests/
+     * ├── products.price-current-release/
+     * │   ├── expected_op.csv                    # Expected output for comparison
+     * │   ├── create_tables/                     # Table creation SQL files
+     * │   │   ├── process-scheduled-price-window.sql
+     * │   │   ├── price-current-release.sql
+     * │   │   └── price-current-stage.sql
+     * │   ├── insert_data/                       # Data insertion SQL files
+     * │   │   └── insert_data.sql
+     * │   ├── drop_tables/                       # Table deletion SQL files
+     * │   │   └── drop_tables.sql
+     * │   └── execute_query.sql                  # Main query to test
+     * 
+     * Configuration Notes:
+     * - Schema Registry timeouts are set to 30 seconds for operations
+     * - Table creation/drop operations timeout after 90 seconds
+     * - Query execution timeout is set to 5 minutes
+     * - All operations include proper error handling and logging
+     * 
+     * @throws Exception if any step in the test process fails
+     */
     @Test
     @Timeout(240)
-    //@setUpResourcesForTest()
     public void hybrisQueryTest() throws Exception {
         // Read expected data from CSV files
         List<Row> expectedOpFromFile = new ArrayList<>();
