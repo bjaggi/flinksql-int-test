@@ -50,23 +50,23 @@ public class HybrisStoreProductServiceTest extends FlinkIntegrationTest {
         File baseDir = new File(basePath);
         logger.info("Base directory path: {}", baseDir.getAbsolutePath());
 
-
         if (baseDir.exists() && baseDir.isDirectory()) {
             File[] subDirs = baseDir.listFiles(File::isDirectory);
-            logger.info("Found {}  subdirectories under execute_tests folder   ", (subDirs != null ? subDirs.length : 0));
+            logger.info("Found {}  📁 subdirectories under execute_tests folder   ", (subDirs != null ? subDirs.length : 0));
             
             if (subDirs != null) {
-                logger.info("\nAll subdirectories in {}:", basePath);   
-                logger.info(" Will now start processing all tests in the subdirectories under {} folder", basePath);
+                logger.info("    All subdirectories 📁 📁  in {}:", subDirs);   
+                logger.info("    Will now start processing all tests in the subdirectories 📁 📁  under {} folder", basePath);
              
                 for (File dir : subDirs) {
-                    logger.info("📁 {}", dir.getName());
+                    logger.info("      - 📁 {}", dir.getName());
                 }
                 
                 for (File subDir : subDirs) {
-                    logger.info("\n\n" + breakline);    
-                    logger.info("Starting Flink Integration Tests for subdirectory: {}", subDir.getName());
-                    logger.info("");
+                    logger.info("\n\n" );
+                    logger.info( breakline);                     
+                    logger.info("Starting Flink Integration Tests for subdirectory 📁 : {}", subDir.getName());
+                    logger.info( breakline);  
 
                     logger.info("Here is the list of all sub directories & files under {}...", subDir.getName());
                     String testFolderPathString = subDir.getPath() + File.separator;
