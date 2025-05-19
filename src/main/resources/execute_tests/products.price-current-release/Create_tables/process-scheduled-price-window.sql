@@ -18,7 +18,7 @@ WITH (
   'key.format' = 'json-registry',
   'scan.bounded.mode' = 'unbounded',
   'scan.startup.mode' = 'earliest-offset',
-  'value.format' = 'json-registry',
-  'kafkastore.timeout.ms' = '90000'
+  'value.format' = 'json-registry'
+ 
 );
 	

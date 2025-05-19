@@ -108,23 +108,26 @@ public class SqlReader {
             if (files != null) {
                 logger.info("Found {} SQL files to execute in {} folder", files.length, file.getName());
                 for (File sqlFile : files) {
-                    logger.info("Executing SQL from file: {}", sqlFile.getName());
+                    logger.info("Executing SQL to Drop tables from file: {}", sqlFile.getName());
                     String sql = readSqlFromFile(sqlFile);
                       TableResult result = executeSql(sql, env);
                       if (result != null) {
                         try {
                             result.await(90, TimeUnit.SECONDS);
-                            logger.info("Successfully created tables from file: {}", sqlFile.getName());
+                            logger.info("    Successfully dropped tables from file: {}", sqlFile.getName());
                         } catch (TimeoutException e) {
-                            logger.error("Table creation timed out after 90 seconds for file: {}", sqlFile.getName());
+                            logger.error("    Table drop timed out after 90 seconds for file: {}", sqlFile.getName());
                             throw new RuntimeException("Table creation timed out", e);
                         } catch (InterruptedException | ExecutionException e) {
-                            logger.error("Error waiting for table creation: {}", e.getMessage());
+                            logger.error("    Error waiting for table to be dropped: {}", e.getMessage());
+                            throw new RuntimeException("Error waiting for table creation", e);
+                        }catch (Exception e) {
+                            logger.error("    Error waiting for table drop: {}", e.getMessage());
                             throw new RuntimeException("Error waiting for table creation", e);
                         }
                     }
 
-                      logger.info("Sucessfully Dropped tables mentioned in the file: {}", sqlFile.getName());
+                      logger.info("    Sucessfully Dropped tables mentioned in the file: {}", sqlFile.getName());
                 }
             } else {
                 logger.info("No SQL files found in {} folder");
