@@ -120,7 +120,7 @@ public class SqlReader {
                             throw new RuntimeException("Table creation timed out", e);
                         } catch (InterruptedException | ExecutionException e) {
                             logger.error("    Error waiting for table to be dropped: {}", e.getMessage());
-                            throw new RuntimeException("Error waiting for table creation", e);
+                            throw new RuntimeException("Error waiting for table deletion", e);
                         }catch (Exception e) {
                             logger.error("    Error waiting for table drop: {}", e.getMessage());
                             throw new RuntimeException("Error waiting for table creation", e);
@@ -187,15 +187,16 @@ public class SqlReader {
             if (result != null) {
                 try {
                     // Increased timeout to 5 minutes
-                    result.await(5, TimeUnit.MINUTES);
-                    logger.info("Query execution completed successfully");
+                    result.await(90, TimeUnit.SECONDS);
+                    
                 } catch (TimeoutException e) {
-                    logger.error("Query execution timed out after 5 minutes for file: {}", file.getName());
+                    logger.error("Query execution timed out after 90 secs for file: {}", file.getName());
                     throw new RuntimeException("Query execution timed out", e);
                 } catch (InterruptedException | ExecutionException e) {
                     logger.error("Error waiting for query completion: {}", e.getMessage());
                     throw new RuntimeException("Error waiting for query completion", e);
                 }
+                logger.info("Query execution completed successfully");
             }
             return result;
         } catch (IOException e) {
@@ -280,14 +281,15 @@ public class SqlReader {
     }
 
     private static void createTable(File file, TableEnvironment env) {
+        String sql = "";
         try {
             File[] files = file.listFiles(File::isFile);
-
+            
             if (files != null) {
                 logger.info("Found {} SQL files to execute in {} folder", files.length, file.getName());
                 for (File sqlFile : files) {
                     logger.info("Executing SQL from file: {}", sqlFile.getName());
-                    String sql = readSqlFromFile(sqlFile);
+                    sql = readSqlFromFile(sqlFile);
                     TableResult result = executeSql(sql, env);
                     if (result != null) {
                         try {
@@ -306,7 +308,7 @@ public class SqlReader {
                 logger.info("No SQL files found in {} folder");
             }
         } catch (Exception e) {
-            logger.error("Unable to create table/s: ", e);
+            logger.error("Unable to create table/s using the query:{} ", sql, e);
             throw new RuntimeException("Failed to create tables", e);
         }
     }

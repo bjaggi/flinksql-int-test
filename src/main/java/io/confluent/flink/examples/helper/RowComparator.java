@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.HashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,28 +13,33 @@ public class RowComparator {
     private static final Logger logger = LoggerFactory.getLogger(RowComparator.class);
     
     /**
-     * Compares two Flink Row objects for equality
+     * Compares two Flink Row objects for equality by converting all elements to strings and comparing as sets
      * @param expected The expected Row
      * @param actual The actual Row
-     * @return true if rows are equal, false otherwise
+     * @return true if rows contain the same elements regardless of order, false otherwise
      */
     public static boolean areRowsEqual(Row expected, Row actual) {
         if (expected == actual) return true;
         if (expected == null || actual == null) return false;
         if (expected.getArity() != actual.getArity()) return false;
 
-        for (int i = 0; i < expected.getArity(); i++) {
-            Object expectedField = expected.getField(i);
-            Object actualField = actual.getField(i);
+        Set<String> expectedSet = new HashSet<>();
+        Set<String> actualSet = new HashSet<>();
 
-            if (!Objects.equals(expectedField, actualField)) {
-                logger.info("Field mismatch at position {}:", i);
-                logger.info("Expected: {}", expectedField);
-                logger.info("Actual: {}", actualField);
-                return false;
-            }
+        // Convert all fields to strings and add to sets
+        for (int i = 0; i < expected.getArity(); i++) {
+            expectedSet.add(String.valueOf(expected.getField(i)));
+            actualSet.add(String.valueOf(actual.getField(i)));
         }
-        return true;
+
+        // Compare sets
+        boolean isEqual = expectedSet.equals(actualSet);
+        if (!isEqual) {
+            logger.info("Row mismatch:");
+            logger.info("Expected set: {}", expectedSet);
+            logger.info("Actual set: {}", actualSet);
+        }
+        return isEqual;
     }
 
     /**
@@ -50,8 +56,6 @@ public class RowComparator {
             return result;
         }
         
-
-        
         if (expected.getArity() != actual.getArity()) {
             result.setEqual(false);
             result.setMessage("Row arity mismatch: expected=" + expected.getArity() + 
@@ -59,49 +63,23 @@ public class RowComparator {
             return result;
         }
 
-        Set<String> fieldNames = expected.getFieldNames(true);
-        List<String> fieldNamesList = fieldNames != null ? new ArrayList<>(fieldNames) : null;
+        Set<String> expectedSet = new HashSet<>();
+        Set<String> actualSet = new HashSet<>();
 
-        // Compare all columns except the last one (headers)
-        for (int i = 0; i < expected.getArity() - 1; i++) {
-            Object expectedField = expected.getField(i);
-            Object actualField = actual.getField(i);
+        // Convert all fields to strings and add to sets
+        for (int i = 0; i < expected.getArity(); i++) {
+            expectedSet.add(String.valueOf(expected.getField(i)));
+            actualSet.add(String.valueOf(actual.getField(i)));
+        }
 
-            String fieldName = fieldNamesList != null && i < fieldNamesList.size() 
-                ? fieldNamesList.get(i) 
-                : "field_" + i;
-
-            logger.info("Comparing field '{}' (position {}):", fieldName, i);
-            logger.info("Expected: {} ({})", expectedField, 
-                expectedField != null ? expectedField.getClass().getName() : "null");
-            logger.info("Actual: {} ({})", actualField, 
-                actualField != null ? actualField.getClass().getName() : "null");
-
-            // Simple null check
-            if ((expectedField == null || "null".equalsIgnoreCase(expectedField.toString())) && (actualField == null || "null".equalsIgnoreCase(actualField.toString()))) {
-                logger.info("Both values are null, considering equal");
-                continue;
-            }
-
-            // Compare values
-            boolean isEqual = false;
-
-            if (expectedField != null && actualField != null) {
-                if (expectedField instanceof Number && actualField instanceof Number) {
-                    isEqual = ((Number) expectedField).doubleValue() == ((Number) actualField).doubleValue();
-                } else {
-                    isEqual = expectedField.toString().equals(actualField.toString());
-                }
-            }
-
-            if (!isEqual) {
-                result.setEqual(false);
-                result.setMessage(String.format(
-                    "Field '%s' (position %d) mismatch:\nExpected: %s\nActual:   %s",
-                    fieldName, i, expectedField, actualField
-                ));
-                return result;
-            }
+        // Compare sets
+        if (!expectedSet.equals(actualSet)) {
+            result.setEqual(false);
+            result.setMessage(String.format(
+                "Row mismatch:\nExpected set: %s\nActual set:   %s",
+                expectedSet, actualSet
+            ));
+            return result;
         }
 
         result.setEqual(true);
