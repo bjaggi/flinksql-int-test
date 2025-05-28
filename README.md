@@ -219,6 +219,8 @@ docker-compose run -v /path/to/your/tests:/app/resources/execute_tests flink-tes
 - CTAS (Create Table As Select) is not available in Table API version 1.20-50
 - Expected in Q2/2025
 - Current workaround: Using `SELECT` instead of `CREATE TABLE AS SELECT`
+- There may be timeout errors to schema registry, if you see these errors either retry or delete the kafka topic
+- the actual vs expected data comparison logic has limitations(special characters/numbers/arrays...), if you code fails. Compare the actual vs expected data and try fixing the code :) . 
 
 ## Best Practices
 1. Create one test case per scenario
