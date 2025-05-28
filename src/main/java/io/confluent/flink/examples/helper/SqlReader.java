@@ -280,15 +280,15 @@ public class SqlReader {
         return false;
     }
 
-    private static void createTable(File file, TableEnvironment env) {
+    private static void createTable(File subDirectory, TableEnvironment env) {
         String sql = "";
         try {
-            File[] files = file.listFiles(File::isFile);
+            File[] files = subDirectory.listFiles(File::isFile);
             
             if (files != null) {
-                logger.info("Found {} SQL files to execute in {} folder", files.length, file.getName());
+                logger.info("Found {} SQL files to execute in {} folder", files.length, subDirectory.getName());
                 for (File sqlFile : files) {
-                    logger.info("Executing SQL from file: {}", sqlFile.getName());
+                    logger.info("Executing SQL from file: {}", subDirectory.getName()+File.separator+sqlFile.getName());
                     sql = readSqlFromFile(sqlFile);
                     TableResult result = executeSql(sql, env);
                     if (result != null) {

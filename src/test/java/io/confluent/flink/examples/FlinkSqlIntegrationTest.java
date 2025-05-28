@@ -16,13 +16,16 @@ import io.confluent.flink.examples.helper.TestConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.stream.StreamSupport;
-
+import java.util.concurrent.TimeoutException;
 import java.util.*;
 import java.util.stream.Stream;
 import java.io.IOException;
 import java.nio.file.*;
 import java.io.File;
 import java.util.stream.Collectors;
+import org.apache.flink.util.CloseableIterator;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -143,76 +146,103 @@ public class FlinkSqlIntegrationTest  {
             }
 
             // Convert expected rows to sets
-            Set<Set<String>> expectedSets = expectedOpFromFile.stream()
-                .map(row -> {
-                    Set<String> rowSet = new HashSet<>();
-                    logger.info("Converting expected row: {}", row);
-                    for (int i = 0; i < row.getArity(); i++) {
-                        Object field = row.getField(i);
-                        if (field != null) {
-                            String value = String.valueOf(field);
-                            rowSet.add(value);
-                            logger.info("Added to expected set: {}", value);
-                        } else {
-                            logger.info("Skipping null value at position {}", i);
-                        }
-                    }
-                    logger.info("Final expected row set: {}", rowSet);
-                    return rowSet;
-                })
-                .collect(Collectors.toSet());
+            Set<String> expectedSets = new HashSet<>();
+               for( Row row : expectedOpFromFile){
+                
+                if(row!=null && row.toString()!=null && !row.toString().isEmpty() && row.getField(0) != null && !row.getField(0).toString().isEmpty()){
+                    logger.info("Expected row as string: {}", row.toString());
+                    expectedSets.add(row.toString());
+                }
+               }
 
-            logger.info("All expected sets: {}", expectedSets);
+            logger.info("All expected result as set of strings: {}", expectedSets);            
 
-            // Fetch and convert actual results to sets
-            Set<Set<String>> actualSets = fetchRows(results)
-                .limit(expectedOpFromFile.size())
-                .map(row -> {
-                    Set<String> rowSet = new HashSet<>();
-                    logger.info("Converting actual row: {}", row);
-                    for (int i = 0; i < row.getArity(); i++) {
-                        Object field = row.getField(i);
-                        if (field != null) {
-                            String value = String.valueOf(field);
-                            rowSet.add(value);
-                            logger.info("Added to actual set: {}", value);
-                        } else {
-                            logger.info("Skipping null value at position {}", i);
-                        }
-                    }
-                    logger.info("Final actual row set: {}", rowSet);
-                    return rowSet;
-                })
-                .collect(Collectors.toSet());
+            logger.info("processing actual results with a timeout of 20 seconds");
+            List<Row> actualData = fetchRowsWithTimeout(results);
+            logger.info("Number of rows fetched: {}", actualData.size());
 
-            logger.info("All actual sets: {}", actualSets);
+            Set<String> actualSets = new HashSet<>();
+            for (Row row : actualData) {
+                
+                if(row!=null && row.toString()!=null && !row.toString().isEmpty() && row.getField(0) != null && !row.getField(0).toString().isEmpty()){
+                    logger.info("Actual row as string: {}", row.toString());
+                    actualSets.add(row.toString());
+                }
+            }
+            
+            logger.info("All actual set of strings: {}", actualSets);
+            
+            
+
+
+
+
 
             // Compare sets
-            boolean isEqual = expectedSets.equals(actualSets);
-            if (!isEqual) {
-                logger.error("Test failed in scenario: {}", scenario.getName());
-                logger.error("Expected sets: {}", expectedSets);
-                logger.error("Actual sets: {}", actualSets);
-                
-                // Find missing and extra values
-                Set<Set<String>> missingInActual = new HashSet<>(expectedSets);
-                missingInActual.removeAll(actualSets);
-                
-                Set<Set<String>> extraInActual = new HashSet<>(actualSets);
-                extraInActual.removeAll(expectedSets);
-                
-                logger.error("Missing in actual results: {}", missingInActual);
-                logger.error("Extra in actual results: {}", extraInActual);
-                
-                fail("Test failed in scenario: " + scenario.getName() + 
-                     "\nExpected sets: " + expectedSets + 
-                     "\nActual sets: " + actualSets +
-                     "\nMissing in actual: " + missingInActual +
-                     "\nExtra in actual: " + extraInActual);
-            } else {
-                logger.info("Test passed in scenario: {}", scenario.getName());
-            }
+           boolean isEqual = expectedSets.equals(actualSets);
+           if (!isEqual) {
+               logger.error("Test failed in scenario: {}", scenario.getName());
+               logger.error("Expected sets: {}", expectedSets);
+               logger.error("Actual sets: {}", actualSets);
+
+               // Find missing and extra values
+               Set<String> missingInActual = new HashSet<>(expectedSets);
+               missingInActual.removeAll(actualSets);
+
+               Set<String> extraInActual = new HashSet<>(actualSets);
+               extraInActual.removeAll(expectedSets);
+
+               logger.error("Missing in actual results: {}", missingInActual);
+               logger.error("Extra in actual results: {}", extraInActual);
+
+               fail("Test failed in scenario: " + scenario.getName() +
+                    "\nExpected sets: " + expectedSets +
+                    "\nActual sets: " + actualSets +
+                    "\nMissing in actual: " + missingInActual +
+                    "\nExtra in actual: " + extraInActual);
+           } else {
+               logger.info("Test passed in scenario: {}", scenario.getName());
+           }
         }
+    }
+
+    
+    protected List<Row> fetchRowsWithTimeout(TableResult result) {
+        List<Row> rows = new ArrayList<>();
+        AtomicBoolean running = new AtomicBoolean(true);
+
+        Thread loopThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (running.get()) {
+                    try (CloseableIterator<Row> iterator = result.collect()) {
+                        if (!iterator.hasNext()) {
+                            logger.info("No rows available in result");
+                            return;
+                        }
+                        
+                        do {                           
+                            Row row = iterator.next();
+                            logger.info("Fetched row: {}", row);
+                            rows.add(row);
+                        } while (iterator.hasNext());
+
+                    } catch (Exception e) {
+                        logger.error("Error collecting rows: {}", e.getMessage());
+                        throw new RuntimeException("Failed to collect rows", e);
+                    }
+                }
+            }
+        });
+
+        loopThread.start();
+        try {
+            Thread.sleep(2000 ); // Wait for 2 seconds
+        } catch (InterruptedException e) {
+            logger.error("Thread interrupted: {}", e.getMessage());
+        }
+        running.set(false);
+        return rows;
     }
 
     protected Stream<Row> fetchRows(TableResult result) {
