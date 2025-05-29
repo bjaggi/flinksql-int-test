@@ -67,7 +67,7 @@ public class FlinkSqlIntegrationTest  {
      * 2. Creates all tables specified in the create_tables folder
      * 3. Inserts data from the insert_data folder
      * 4. Executes the query from query.sql
-     * 5. Compares results with expected_op.csv
+     * 5. Compares results with expected_op.csv using string-based set comparison
      * 
      * Directory Structure:
      * execute_tests/
@@ -83,10 +83,18 @@ public class FlinkSqlIntegrationTest  {
      * │   │   └── drop_tables.sql
      * │   └── execute_query.sql                  # Main query to test
      * 
+     * Comparison Logic:
+     * - Results are compared using string-based set comparison
+     * - Each row is converted to a string representation
+     * - Null or empty rows are filtered out
+     * - Sets are compared for equality regardless of order
+     * - Detailed comparison shows missing and extra values
+     * 
      * Configuration Notes:
      * - Schema Registry timeouts are set to 30 seconds for operations
      * - Table creation/drop operations timeout after 90 seconds
      * - Query execution timeout is set to 5 minutes
+     * - Result collection timeout is set to 20 seconds
      * - All operations include proper error handling and logging
      * 
      * @throws Exception if any step in the test process fails

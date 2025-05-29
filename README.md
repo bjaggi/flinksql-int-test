@@ -112,7 +112,11 @@ The framework will automatically discover and execute all scenarios under the `e
    - Validates the file exists
    - Imports the data for comparison
 3. Executes the Hybris store product query
-4. Compares the actual results with expected results
+4. Compares the actual results with expected results using string-based set comparison:
+   - Converts each row to string representation
+   - Filters out null or empty rows
+   - Compares sets for equality regardless of order
+   - Shows detailed differences (missing/extra values)
 5. Logs detailed comparison information for each row
 6. Cleans up by dropping temporary tables
 
@@ -220,7 +224,13 @@ docker-compose run -v /path/to/your/tests:/app/resources/execute_tests flink-tes
 - Expected in Q2/2025
 - Current workaround: Using `SELECT` instead of `CREATE TABLE AS SELECT`
 - There may be timeout errors to schema registry, if you see these errors either retry or delete the kafka topic
-- the actual vs expected data comparison logic has limitations(special characters/numbers/arrays...), if you code fails. Compare the actual vs expected data and try fixing the code :) . 
+- The string-based set comparison has the following limitations:
+  - Special characters in strings may affect comparison
+  - Complex data types (arrays, maps, nested structures) may not compare correctly
+  - Timestamp formats must match exactly
+  - Null values are filtered out
+  - Order of fields in rows is not considered
+  If you encounter comparison issues, check the actual vs expected data format and adjust accordingly.
 
 ## Best Practices
 1. Create one test case per scenario
