@@ -124,10 +124,10 @@ public class FlinkSqlIntegrationTest  {
             logger.info("Processing test scenario: {}", scenario.getName());
             logger.info("{}", breakline);
 
-            // Set up test resources
+            // Set up test resources ( Delete , Create , Insert )
             SqlReader.setUpResourcesForTest(env, scenario.getPath());
 
-            // Execute the test query
+            // Execute the query from execute_query.sql
             File executeQueryFile = new File(scenario, EXECUTE_QUERY_SQL);
             if (!executeQueryFile.exists()) {
                 logger.warn("No execute_query.sql found in {}", scenario.getName());
@@ -146,32 +146,31 @@ public class FlinkSqlIntegrationTest  {
                 logger.warn("No expected_op.csv found in {}", scenario.getName());
                 continue;
             }
-
+            // Read expected output from expected_op.csv
             List<Row> expectedOpFromFile = DataImporter.importFromCSV(expectedOpFile.getPath());
             if (expectedOpFromFile.isEmpty()) {
                 logger.warn("Expected output file is empty in {}", scenario.getName());
                 continue;
             }
 
-            // Convert expected rows to sets
+            // Convert expected rows to sets of strings
             Set<String> expectedSets = new HashSet<>();
-               for( Row row : expectedOpFromFile){
-                
+               for( Row row : expectedOpFromFile){                
                 if(row!=null && row.toString()!=null && !row.toString().isEmpty() && row.getField(0) != null && !row.getField(0).toString().isEmpty()){
                     logger.info("Expected row as string: {}", row.toString());
                     expectedSets.add(row.toString());
                 }
                }
-
             logger.info("All expected result as set of strings: {}", expectedSets);            
 
-            logger.info("processing actual results with a timeout of 20 seconds");
+            // 2 seconds timeout was added to avoid infinite loop problem
+            logger.info("processing actual results with a timeout of 2 seconds");
             List<Row> actualData = fetchRowsWithTimeout(results);
             logger.info("Number of rows fetched: {}", actualData.size());
 
+            // Convert actual rows to sets of strings
             Set<String> actualSets = new HashSet<>();
-            for (Row row : actualData) {
-                
+            for (Row row : actualData) {                
                 if(row!=null && row.toString()!=null && !row.toString().isEmpty() && row.getField(0) != null && !row.getField(0).toString().isEmpty()){
                     logger.info("Actual row as string: {}", row.toString());
                     actualSets.add(row.toString());
@@ -179,35 +178,11 @@ public class FlinkSqlIntegrationTest  {
             }
             
             logger.info("All actual set of strings: {}", actualSets);
-            
-            
-
-
-
-
 
             // Compare sets
            boolean isEqual = expectedSets.equals(actualSets);
            if (!isEqual) {
-               logger.error("Test failed in scenario: {}", scenario.getName());
-               logger.error("Expected sets: {}", expectedSets);
-               logger.error("Actual sets: {}", actualSets);
-
-               // Find missing and extra values
-               Set<String> missingInActual = new HashSet<>(expectedSets);
-               missingInActual.removeAll(actualSets);
-
-               Set<String> extraInActual = new HashSet<>(actualSets);
-               extraInActual.removeAll(expectedSets);
-
-               logger.error("Missing in actual results: {}", missingInActual);
-               logger.error("Extra in actual results: {}", extraInActual);
-
-               fail("Test failed in scenario: " + scenario.getName() +
-                    "\nExpected sets: " + expectedSets +
-                    "\nActual sets: " + actualSets +
-                    "\nMissing in actual: " + missingInActual +
-                    "\nExtra in actual: " + extraInActual);
+               compareAndLogResults(scenario.getName(), expectedSets, actualSets);
            } else {
                logger.info("Test passed in scenario: {}", scenario.getName());
            }
@@ -256,5 +231,27 @@ public class FlinkSqlIntegrationTest  {
     protected Stream<Row> fetchRows(TableResult result) {
         Iterable<Row> iterable = result::collect;
         return StreamSupport.stream(iterable.spliterator(), false);
+    }
+
+    private void compareAndLogResults(String scenarioName, Set<String> expectedSets, Set<String> actualSets) {
+        logger.error("Test failed in scenario: {}", scenarioName);
+        logger.error("Expected sets: {}", expectedSets);
+        logger.error("Actual sets: {}", actualSets);
+
+        // Find missing and extra values
+        Set<String> missingInActual = new HashSet<>(expectedSets);
+        missingInActual.removeAll(actualSets);
+
+        Set<String> extraInActual = new HashSet<>(actualSets);
+        extraInActual.removeAll(expectedSets);
+
+        logger.error("Missing in actual results: {}", missingInActual);
+        logger.error("Extra in actual results: {}", extraInActual);
+
+        fail("Test failed in scenario: " + scenarioName +
+             "\nExpected sets: " + expectedSets +
+             "\nActual sets: " + actualSets +
+             "\nMissing in actual: " + missingInActual +
+             "\nExtra in actual: " + extraInActual);
     }
 }

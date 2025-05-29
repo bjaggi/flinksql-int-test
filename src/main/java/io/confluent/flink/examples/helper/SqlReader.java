@@ -352,10 +352,7 @@ public class SqlReader {
                     }
 
                 }
-                
-         
-         
-                
+                                                  
                 // Finally process insert files
                 for (File file : files) {
                     if (file.getName().contains(String.valueOf(TestConstants.INSERT_DATA_SQL).toLowerCase())) {
